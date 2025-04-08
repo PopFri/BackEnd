@@ -16,8 +16,11 @@ public enum ErrorStatus implements BaseErrorCode {
     _UNAUTHORIZED(HttpStatus.UNAUTHORIZED,"COMMON401","인증이 필요합니다."),
     _FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON403", "금지된 요청입니다."),
 
-    TEMP_EXCEPTION(HttpStatus.BAD_REQUEST, "TEMP4001", "이거는 테스트");
-
+    TEMP_EXCEPTION(HttpStatus.BAD_REQUEST, "TEMP4001", "이거는 테스트"),
+    //OAuth 관련 에러
+    _OAUTH_GOOGLE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "OAUTH5001", "구글 로그인 중 에러가 발생했습니다."),
+    _OAUTH_GOOGLE_RESPONSE_NULL(HttpStatus.INTERNAL_SERVER_ERROR, "OAUTH5001", "구글 로그인 응답이 비어있습니다."),
+    ;
     private final HttpStatus httpStatus;
     private final String code;
     private final String message;

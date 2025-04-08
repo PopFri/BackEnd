@@ -6,7 +6,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     properties:
@@ -14,3 +14,15 @@ spring:
         format_sql: true
         default_batch_fetch_size: 1000
     database-platform: org.hibernate.dialect.MySQL8Dialect
+oauth2:
+  google:
+    url: https://accounts.google.com/o/oauth2/v2/auth # 고정값
+    client:
+      id: ${GOOGLE_OAUTH_ID} # 구글 개발자 콘솔에서 발급받은 Client ID
+      secret: ${GOOGLE_OAUTH_SECRET} # 구글 개발자 콘솔에서 발급받은 Client Secret
+    callback:
+      url: http://localhost:8080/login/oauth2/code/google # 유저 설정에 따라 변경 가능 (Redirect URI)
+    token:
+      url: https://oauth2.googleapis.com/token
+    resource:
+      url: https://www.googleapis.com/oauth2/v2/userinfo
