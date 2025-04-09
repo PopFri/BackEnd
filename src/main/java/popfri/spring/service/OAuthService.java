@@ -94,13 +94,22 @@ public class OAuthService {
         }
         //add User
         if(userResDto != null){
-            return userRepository.save(User.builder()
-                    .userName(userResDto.getName())
-                    .accessToken(accessToken)
-                    .loginType("GOOGLE")
-                    .userEmail(userResDto.getEmail())
-                    .imageUrl(userResDto.getPicture())
-                    .build());
+            User user;
+
+            user = userRepository.findByUserEmail(userResDto.getEmail());
+
+            if(user == null){
+                return userRepository.save(User.builder()
+                        .userName(userResDto.getName())
+                        .accessToken(accessToken)
+                        .loginType("GOOGLE")
+                        .userEmail(userResDto.getEmail())
+                        .imageUrl(userResDto.getPicture())
+                        .build());
+            } else {
+                user.setAccessToken(accessToken);
+                return userRepository.save(user);
+            }
         } else {
             throw new OAuthHandler(ErrorStatus._OAUTH_GOOGLE_RESPONSE_NULL);
         }
