@@ -26,7 +26,4 @@ public class User {
 
     @Column(name = "login_type", length = 10)
     private String loginType;
-
-    @Column(name = "access_token")
-    private String accessToken;
 }
