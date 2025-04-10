@@ -24,6 +24,9 @@ public class User {
     @Column(name = "image_url", length = 300)
     private String imageUrl;
 
+    @Column(name = "provide_id", length = 300)
+    private String provideId;
+
     @Column(name = "login_type", length = 10)
     private String loginType;
 }

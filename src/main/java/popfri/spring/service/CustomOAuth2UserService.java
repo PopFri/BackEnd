@@ -34,12 +34,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         String role = "ROLE_USER";
 
-        User user = userRepository.findByUserEmail(oAuth2Response.getEmail());
+        User user = userRepository.findByProvideId(oAuth2Response.getProvider() + "_" + oAuth2Response.getProviderId());
         if(user == null){
             userRepository.save(User.builder()
                     .userName(oAuth2Response.getName())
                     .userEmail(oAuth2Response.getEmail())
                     .imageUrl(oAuth2Response.getProfileImage())
+                    .provideId(oAuth2Response.getProvider() + "_" + oAuth2Response.getProviderId())
                     .loginType(oAuth2Response.getProvider())
                     .build());
         }

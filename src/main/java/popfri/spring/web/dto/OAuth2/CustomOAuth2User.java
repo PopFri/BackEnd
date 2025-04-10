@@ -13,6 +13,7 @@ public class CustomOAuth2User implements OAuth2User {
     private final OAuth2Response oAuth2Response;
     private final String role;
 
+
     @Override
     public Map<String, Object> getAttributes() {
         return null;
@@ -32,5 +33,15 @@ public class CustomOAuth2User implements OAuth2User {
     public String getName() {
 
         return oAuth2Response.getName();
+    }
+
+    public String getProviderId() {
+
+        return oAuth2Response.getProvider()+"_"+oAuth2Response.getProviderId();
+    }
+
+    public String getProfileImage() {
+
+        return oAuth2Response.getProfileImage();
     }
 }
