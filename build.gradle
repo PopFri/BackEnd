@@ -38,6 +38,13 @@ dependencies {
 
 	//WebClient
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+	//OAuth 2.0
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+	//Spring Security
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	testImplementation 'org.springframework.security:spring-security-test'
 }
 
 tasks.named('test') {
