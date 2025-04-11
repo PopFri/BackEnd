@@ -1,4 +1,4 @@
-package popfri.spring.web.dto.OAuth2;
+package popfri.spring.OAuth2.dto;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -10,9 +10,7 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 public class CustomOAuth2User implements OAuth2User {
-    private final OAuth2Response oAuth2Response;
-    private final String role;
-
+    private final UserDTO userDTO;
 
     @Override
     public Map<String, Object> getAttributes() {
@@ -24,7 +22,7 @@ public class CustomOAuth2User implements OAuth2User {
 
         Collection<GrantedAuthority> collection = new ArrayList<>();
 
-        collection.add((GrantedAuthority) () -> role);
+        collection.add((GrantedAuthority) userDTO::getRole);
 
         return collection;
     }
@@ -32,16 +30,15 @@ public class CustomOAuth2User implements OAuth2User {
     @Override
     public String getName() {
 
-        return oAuth2Response.getName();
+        return userDTO.getName();
+    }
+
+    public String getEmail(){
+        return userDTO.getEmail();
     }
 
     public String getProviderId() {
 
-        return oAuth2Response.getProvider()+"_"+oAuth2Response.getProviderId();
-    }
-
-    public String getProfileImage() {
-
-        return oAuth2Response.getProfileImage();
+        return userDTO.getProvideId();
     }
 }

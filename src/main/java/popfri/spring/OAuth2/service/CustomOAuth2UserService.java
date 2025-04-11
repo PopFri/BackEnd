@@ -1,4 +1,4 @@
-package popfri.spring.service;
+package popfri.spring.OAuth2.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -6,11 +6,12 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import popfri.spring.OAuth2.dto.UserDTO;
 import popfri.spring.domain.User;
 import popfri.spring.repository.UserRepository;
-import popfri.spring.web.dto.OAuth2.CustomOAuth2User;
-import popfri.spring.web.dto.OAuth2.GoogleResponse;
-import popfri.spring.web.dto.OAuth2.OAuth2Response;
+import popfri.spring.OAuth2.dto.CustomOAuth2User;
+import popfri.spring.OAuth2.dto.GoogleResponse;
+import popfri.spring.OAuth2.dto.OAuth2Response;
 
 @Service
 @RequiredArgsConstructor
@@ -32,9 +33,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             return null;
         }
 
-        String role = "ROLE_USER";
-
         User user = userRepository.findByProvideId(oAuth2Response.getProvider() + "_" + oAuth2Response.getProviderId());
+        UserDTO userDTO;
         if(user == null){
             userRepository.save(User.builder()
                     .userName(oAuth2Response.getName())
@@ -43,8 +43,22 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .provideId(oAuth2Response.getProvider() + "_" + oAuth2Response.getProviderId())
                     .loginType(oAuth2Response.getProvider())
                     .build());
+
+            userDTO = UserDTO.builder()
+                    .role("ROLE_USER")
+                    .name(oAuth2Response.getName())
+                    .email(oAuth2Response.getEmail())
+                    .provideId(oAuth2Response.getProvider() + "_" + oAuth2Response.getProviderId())
+                    .build();
+        } else {
+            userDTO = UserDTO.builder()
+                    .role("ROLE_USER")
+                    .name(user.getUserName())
+                    .email(user.getUserEmail())
+                    .provideId(user.getProvideId())
+                    .build();
         }
 
-        return new CustomOAuth2User(oAuth2Response, role);
+        return new CustomOAuth2User(userDTO);
     }
 }

@@ -1,4 +1,4 @@
-package popfri.spring.web.dto.OAuth2;
+package popfri.spring.OAuth2.dto;
 
 public interface OAuth2Response {
 
