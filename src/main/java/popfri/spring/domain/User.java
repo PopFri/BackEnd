@@ -15,7 +15,7 @@ public class User {
     @Column(name = "user_id")
     private Long userId;
 
-    @Column(name = "user_email", length = 50, unique = true)
+    @Column(name = "user_email", length = 50)
     private String userEmail;
 
     @Column(name = "user_name", length = 10)
@@ -24,7 +24,7 @@ public class User {
     @Column(name = "image_url", length = 300)
     private String imageUrl;
 
-    @Column(name = "provide_id", length = 300)
+    @Column(name = "provide_id", length = 300, unique = true)
     private String provideId;
 
     @Column(name = "login_type", length = 10)
