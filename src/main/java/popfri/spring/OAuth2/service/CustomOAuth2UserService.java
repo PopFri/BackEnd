@@ -6,12 +6,9 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-import popfri.spring.OAuth2.dto.UserDTO;
+import popfri.spring.OAuth2.dto.*;
 import popfri.spring.domain.User;
 import popfri.spring.repository.UserRepository;
-import popfri.spring.OAuth2.dto.CustomOAuth2User;
-import popfri.spring.OAuth2.dto.GoogleResponse;
-import popfri.spring.OAuth2.dto.OAuth2Response;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +24,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
         OAuth2Response oAuth2Response;
 
-        if (registrationId.equals("google")) {
+        if (registrationId.equals("naver")) {
+            oAuth2Response = new NaverResponse(oAuth2User.getAttributes());
+        }
+        else if (registrationId.equals("google")) {
             oAuth2Response = new GoogleResponse(oAuth2User.getAttributes());
         } else {
             return null;
