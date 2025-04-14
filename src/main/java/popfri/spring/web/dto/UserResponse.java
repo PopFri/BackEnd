@@ -17,12 +17,12 @@ public class UserResponse {
         Long userId;
 
         @Schema(description = "유저 이름", example = "홍길동")
-        Long name;
+        String name;
 
         @Schema(description = "유저 이메일", example = "example@gmail.com")
-        Long email;
+        String email;
 
         @Schema(description = "유저 프로필 url", example = "userprofile.jpg")
-        Long imageUrl;
+        String imageUrl;
     }
 }
