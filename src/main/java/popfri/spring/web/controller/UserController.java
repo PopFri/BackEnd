@@ -8,14 +8,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import popfri.spring.apiPayload.ApiResponse;
-import popfri.spring.converter.TempConverter;
 import popfri.spring.converter.UserConverter;
 import popfri.spring.domain.User;
 import popfri.spring.jwt.CookieUtil;
 import popfri.spring.jwt.JWTUtil;
-import popfri.spring.repository.UserRepository;
 import popfri.spring.service.UserService;
-import popfri.spring.web.dto.TempResponse;
 import popfri.spring.web.dto.UserResponse;
 
 @RestController
