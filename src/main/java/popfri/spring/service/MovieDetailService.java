@@ -7,7 +7,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.springframework.stereotype.Service;
 import popfri.spring.web.dto.MovieDetailResponse;
-
+import org.springframework.beans.factory.annotation.Value;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,12 +16,16 @@ import java.util.List;
 public class MovieDetailService {
     private final OkHttpClient client = new OkHttpClient();
 
-    public String getMovieDetail(String movieId) {
+    @Value("${tmdb.api.key}")
+    private String tmdbKey;
+
+    // movie detail api 호출
+    public String loadMovieDetail(String movieId) {
         Request request = new Request.Builder()
                 .url("https://api.themoviedb.org/3/movie/" + movieId + "?language=ko")
                 .get()
                 .addHeader("accept", "application/json")
-                .addHeader("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0MzQ3MDA4ZGI1ZTIyNDllNGRkNmNjMmQ1OGMxYWRmYiIsIm5iZiI6MTc0MTMyOTUwNS43NjQsInN1YiI6IjY3Y2E5NDYxMWY5ZWYzNTMyZGFmYzkyMCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.HiGSzkCsrcTBs7haL475_6ITUzvoWUR_m2vlYOJSLkg")
+                .addHeader("Authorization", "Bearer " + tmdbKey)
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -36,12 +40,13 @@ public class MovieDetailService {
         }
     }
 
-    public String getMovieProviders(String movieId) {
+    // watch providers api 호출
+    public String loadMovieProviders(String movieId) {
         Request request = new Request.Builder()
                 .url("https://api.themoviedb.org/3/movie/" + movieId + "/watch/providers")
                 .get()
                 .addHeader("accept", "application/json")
-                .addHeader("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0MzQ3MDA4ZGI1ZTIyNDllNGRkNmNjMmQ1OGMxYWRmYiIsIm5iZiI6MTc0MTMyOTUwNS43NjQsInN1YiI6IjY3Y2E5NDYxMWY5ZWYzNTMyZGFmYzkyMCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.HiGSzkCsrcTBs7haL475_6ITUzvoWUR_m2vlYOJSLkg")
+                .addHeader("Authorization", "Bearer " + tmdbKey)
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -56,12 +61,13 @@ public class MovieDetailService {
         }
     }
 
-    public String getMovieImages(String movieId) {
+    // 영화 이미지 호출
+    public String loadMovieImages(String movieId) {
         Request request = new Request.Builder()
                 .url("https://api.themoviedb.org/3/movie/" + movieId + "/images")
                 .get()
                 .addHeader("accept", "application/json")
-                .addHeader("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0MzQ3MDA4ZGI1ZTIyNDllNGRkNmNjMmQ1OGMxYWRmYiIsIm5iZiI6MTc0MTMyOTUwNS43NjQsInN1YiI6IjY3Y2E5NDYxMWY5ZWYzNTMyZGFmYzkyMCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.HiGSzkCsrcTBs7haL475_6ITUzvoWUR_m2vlYOJSLkg")
+                .addHeader("Authorization", "Bearer " + tmdbKey)
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -76,12 +82,13 @@ public class MovieDetailService {
         }
     }
 
-    public String getMovieInfo(String movieId, String api) {
+    // 입력받은 내용의 정보 호출
+    public String loadMovieInfo(String movieId, String api) {
         Request request = new Request.Builder()
                 .url("https://api.themoviedb.org/3/movie/" + movieId + "/" + api + "?language=ko")
                 .get()
                 .addHeader("accept", "application/json")
-                .addHeader("Authorization", "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0MzQ3MDA4ZGI1ZTIyNDllNGRkNmNjMmQ1OGMxYWRmYiIsIm5iZiI6MTc0MTMyOTUwNS43NjQsInN1YiI6IjY3Y2E5NDYxMWY5ZWYzNTMyZGFmYzkyMCIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.HiGSzkCsrcTBs7haL475_6ITUzvoWUR_m2vlYOJSLkg")
+                .addHeader("Authorization", "Bearer " + tmdbKey)
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -96,7 +103,8 @@ public class MovieDetailService {
         }
     }
 
-    public MovieDetailResponse getMovie(String movieId) {
+    // 영화 상세 정보 호출
+    public MovieDetailResponse loadMovie(String movieId) {
         ObjectMapper objectMapper = new ObjectMapper();
         MovieDetailResponse movieDetailResponse = new MovieDetailResponse();
         MovieDetailResponse.Result result = new MovieDetailResponse.Result();
@@ -104,7 +112,7 @@ public class MovieDetailService {
 
         try {
             // 메인 정보
-            String movieDetail = getMovieDetail(movieId);
+            String movieDetail = loadMovieDetail(movieId);
             JsonNode detailNode = objectMapper.readTree(movieDetail);
             result.setBackgroundImageUrl(detailNode.path("backdrop_path").asText());
             result.setImageUrl(detailNode.path("poster_path").asText());
@@ -118,7 +126,7 @@ public class MovieDetailService {
             result.setGenres(genres);
 
             // 제공 플랫폼 (List<Providers>)
-            String movieProviders = getMovieProviders(movieId);
+            String movieProviders = loadMovieProviders(movieId);
             JsonNode providersNode = objectMapper.readTree(movieProviders).path("results").path("KR").path("flatrate");
             if (providersNode.isArray()) {
                 List<MovieDetailResponse.Result.Providers> providerList =
@@ -128,7 +136,7 @@ public class MovieDetailService {
             }
 
             // 출연진 (List<Cast>)
-            String movieCredits = getMovieInfo(movieId, "credits");
+            String movieCredits = loadMovieInfo(movieId, "credits");
             JsonNode castNode = objectMapper.readTree(movieCredits).path("cast");
             List<JsonNode> limitedCastList = new ArrayList<>();
             for (int i = 0; i < Math.min(5, castNode.size()); i++) {
@@ -151,7 +159,7 @@ public class MovieDetailService {
             result.setDirecting(directorName);
 
             // 영상 (List<Videos>)
-            String movieVideos = getMovieInfo(movieId, "videos");
+            String movieVideos = loadMovieInfo(movieId, "videos");
             JsonNode videosNode = objectMapper.readTree(movieVideos).path("results");
             List<JsonNode> limitedVideos = new ArrayList<>();
             for (int i = 0; i < Math.min(7, videosNode.size()); i++) {
@@ -163,7 +171,7 @@ public class MovieDetailService {
             result.setVideos(videosList);
 
             // 이미지 (List<String>)
-            String movieImages = getMovieImages(movieId);
+            String movieImages = loadMovieImages(movieId);
             JsonNode backdropsNode = objectMapper.readTree(movieImages).path("backdrops");
             List<JsonNode> limitedBackdrops = new ArrayList<>();
             for (int i = 0; i < Math.min(7, backdropsNode.size()); i++) {

@@ -15,8 +15,9 @@ public class MovieDetailController {
 
     private final MovieDetailService movieDetailService;
 
+    // 영화 상세 정보 조회
     @GetMapping("/{movieId}")
-    public MovieDetailResponse getMovieDetail(@PathVariable("movieId") String movieId) {
-        return movieDetailService.getMovie(movieId);
+    public MovieDetailResponse loadMovieInformation(@PathVariable("movieId") String movieId) {
+        return movieDetailService.loadMovie(movieId);
     }
 }
