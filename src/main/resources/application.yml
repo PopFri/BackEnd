@@ -64,3 +64,7 @@ spring:
 
 frontend:
   url: ${FRONTEND_URL}
+
+tmdb:
+  api:
+    key: ${TMDB_API_KEY}
