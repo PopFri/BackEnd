@@ -5,8 +5,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import popfri.spring.apiPayload.ApiResponse;
+import popfri.spring.converter.UserConverter;
 import popfri.spring.service.MovieDetailService;
 import popfri.spring.web.dto.MovieDetailResponse;
+import popfri.spring.web.dto.UserResponse;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,7 +20,7 @@ public class MovieDetailController {
 
     // 영화 상세 정보 조회
     @GetMapping("/{movieId}")
-    public MovieDetailResponse loadMovieInformation(@PathVariable("movieId") String movieId) {
-        return movieDetailService.loadMovie(movieId);
+    public ApiResponse<MovieDetailResponse.Result> loadMovieInformation(@PathVariable("movieId") String movieId) {
+        return ApiResponse.onSuccess(movieDetailService.loadMovie(movieId));
     }
 }

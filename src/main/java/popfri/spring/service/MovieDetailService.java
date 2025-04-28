@@ -104,11 +104,9 @@ public class MovieDetailService {
     }
 
     // 영화 상세 정보 호출
-    public MovieDetailResponse loadMovie(String movieId) {
+    public MovieDetailResponse.Result loadMovie(String movieId) {
         ObjectMapper objectMapper = new ObjectMapper();
-        MovieDetailResponse movieDetailResponse = new MovieDetailResponse();
         MovieDetailResponse.Result result = new MovieDetailResponse.Result();
-        movieDetailResponse.setResult(result);
 
         try {
             // 메인 정보
@@ -186,6 +184,6 @@ public class MovieDetailService {
             e.printStackTrace();
         }
 
-        return movieDetailResponse;
+        return result;
     }
 }

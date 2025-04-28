@@ -1,26 +1,21 @@
 package popfri.spring.web.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 
 @Getter
 @Setter
 public class MovieDetailResponse {
-    boolean isSuccess;
-    String code;
-    String message;
-    Result result;
 
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     @Getter
     @Setter
     public static class Result {
-        private Long userId;
-        private String name;
-        private String email;
         private String backgroundImageUrl;
         private String imageUrl;
         private String title;
