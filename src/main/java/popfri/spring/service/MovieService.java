@@ -6,6 +6,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.springframework.stereotype.Service;
+import popfri.spring.apiPayload.code.status.ErrorStatus;
+import popfri.spring.apiPayload.exception.handler.MovieHandler;
 import popfri.spring.web.dto.MovieResponse;
 import org.springframework.beans.factory.annotation.Value;
 import java.io.IOException;
@@ -32,11 +34,10 @@ public class MovieService {
             if (response.isSuccessful() && response.body() != null) {
                 return response.body().string();
             } else {
-                return "요청 실패: " + response.code();
+                throw new MovieHandler(ErrorStatus._MOVIE_NOT_EXIST);
             }
         } catch (IOException e) {
-            e.printStackTrace();
-            return "에러 발생: " + e.getMessage();
+            throw new MovieHandler(ErrorStatus._INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -53,11 +54,10 @@ public class MovieService {
             if (response.isSuccessful() && response.body() != null) {
                 return response.body().string();
             } else {
-                return "요청 실패: " + response.code();
+                throw new MovieHandler(ErrorStatus._MOVIE_NOT_EXIST);
             }
         } catch (IOException e) {
-            e.printStackTrace();
-            return "에러 발생: " + e.getMessage();
+            throw new MovieHandler(ErrorStatus._INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -74,11 +74,10 @@ public class MovieService {
             if (response.isSuccessful() && response.body() != null) {
                 return response.body().string();
             } else {
-                return "요청 실패: " + response.code();
+                throw new MovieHandler(ErrorStatus._MOVIE_NOT_EXIST);
             }
         } catch (IOException e) {
-            e.printStackTrace();
-            return "에러 발생: " + e.getMessage();
+            throw new MovieHandler(ErrorStatus._INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -95,11 +94,10 @@ public class MovieService {
             if (response.isSuccessful() && response.body() != null) {
                 return response.body().string();
             } else {
-                return "요청 실패: " + response.code();
+                throw new MovieHandler(ErrorStatus._MOVIE_NOT_EXIST);
             }
         } catch (IOException e) {
-            e.printStackTrace();
-            return "에러 발생: " + e.getMessage();
+            throw new MovieHandler(ErrorStatus._INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -184,7 +182,7 @@ public class MovieService {
             result.setImages(imagesList);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new MovieHandler(ErrorStatus._INTERNAL_SERVER_ERROR);
         }
 
         return result;
