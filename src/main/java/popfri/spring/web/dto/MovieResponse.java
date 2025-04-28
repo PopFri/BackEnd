@@ -7,7 +7,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class MovieDetailResponse {
+public class MovieResponse {
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Builder
@@ -68,4 +68,5 @@ public class MovieDetailResponse {
             String file_path;
         }
     }
+
 }

@@ -6,14 +6,14 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.springframework.stereotype.Service;
-import popfri.spring.web.dto.MovieDetailResponse;
+import popfri.spring.web.dto.MovieResponse;
 import org.springframework.beans.factory.annotation.Value;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class MovieDetailService {
+public class MovieService {
     private final OkHttpClient client = new OkHttpClient();
 
     @Value("${tmdb.api.key}")
@@ -104,9 +104,9 @@ public class MovieDetailService {
     }
 
     // 영화 상세 정보 호출
-    public MovieDetailResponse.MovieDetailDTO loadMovie(String movieId) {
+    public MovieResponse.MovieDetailDTO loadMovie(String movieId) {
         ObjectMapper objectMapper = new ObjectMapper();
-        MovieDetailResponse.MovieDetailDTO result = new MovieDetailResponse.MovieDetailDTO();
+        MovieResponse.MovieDetailDTO result = new MovieResponse.MovieDetailDTO();
 
         try {
             // 메인 정보
@@ -119,7 +119,7 @@ public class MovieDetailService {
             result.setRelease_date(detailNode.path("release_date").asText());
             result.setOverView(detailNode.path("overview").asText());
             JsonNode genresNode = detailNode.path("genres");
-            List<MovieDetailResponse.MovieDetailDTO.Genres> genres = objectMapper.readerForListOf(MovieDetailResponse.MovieDetailDTO.Genres.class)
+            List<MovieResponse.MovieDetailDTO.Genres> genres = objectMapper.readerForListOf(MovieResponse.MovieDetailDTO.Genres.class)
                     .readValue(genresNode);
             result.setGenres(genres);
 
@@ -127,8 +127,8 @@ public class MovieDetailService {
             String movieProviders = loadMovieProviders(movieId);
             JsonNode providersNode = objectMapper.readTree(movieProviders).path("results").path("KR").path("flatrate");
             if (providersNode.isArray()) {
-                List<MovieDetailResponse.MovieDetailDTO.Providers> providerList =
-                        objectMapper.readerForListOf(MovieDetailResponse.MovieDetailDTO.Providers.class)
+                List<MovieResponse.MovieDetailDTO.Providers> providerList =
+                        objectMapper.readerForListOf(MovieResponse.MovieDetailDTO.Providers.class)
                                 .readValue(providersNode);
                 result.setProviders(providerList);
             }
@@ -140,18 +140,21 @@ public class MovieDetailService {
             for (int i = 0; i < Math.min(5, castNode.size()); i++) {
                 limitedCastList.add(castNode.get(i));
             }
-            List<MovieDetailResponse.MovieDetailDTO.Cast> castList =
-                    objectMapper.readerForListOf(MovieDetailResponse.MovieDetailDTO.Cast.class)
+            List<MovieResponse.MovieDetailDTO.Cast> castList =
+                    objectMapper.readerForListOf(MovieResponse.MovieDetailDTO.Cast.class)
                             .readValue(objectMapper.writeValueAsString(limitedCastList));
             result.setCast(castList);
 
             // 감독
             JsonNode directingNode = objectMapper.readTree(movieCredits).path("crew");
             String directorName = null;
+            Double directorPopularity = 0.0;
             for (JsonNode castMember : directingNode) {
                 if ("Directing".equals(castMember.path("known_for_department").asText())) {
-                    directorName = castMember.path("name").asText();
-                    break;
+                    if (castMember.path("popularity").asDouble() > directorPopularity) {
+                        directorPopularity = castMember.path("popularity").asDouble();
+                        directorName = castMember.path("name").asText();
+                    }
                 }
             }
             result.setDirecting(directorName);
@@ -163,8 +166,8 @@ public class MovieDetailService {
             for (int i = 0; i < Math.min(7, videosNode.size()); i++) {
                 limitedVideos.add(videosNode.get(i));
             }
-            List<MovieDetailResponse.MovieDetailDTO.Videos> videosList =
-                    objectMapper.readerForListOf(MovieDetailResponse.MovieDetailDTO.Videos.class)
+            List<MovieResponse.MovieDetailDTO.Videos> videosList =
+                    objectMapper.readerForListOf(MovieResponse.MovieDetailDTO.Videos.class)
                             .readValue(objectMapper.writeValueAsString(limitedVideos));
             result.setVideos(videosList);
 
@@ -175,8 +178,8 @@ public class MovieDetailService {
             for (int i = 0; i < Math.min(7, backdropsNode.size()); i++) {
                 limitedBackdrops.add(backdropsNode.get(i));
             }
-            List<MovieDetailResponse.MovieDetailDTO.Images> imagesList =
-                    objectMapper.readerForListOf(MovieDetailResponse.MovieDetailDTO.Images.class)
+            List<MovieResponse.MovieDetailDTO.Images> imagesList =
+                    objectMapper.readerForListOf(MovieResponse.MovieDetailDTO.Images.class)
                             .readValue(objectMapper.writeValueAsString(limitedBackdrops));
             result.setImages(imagesList);
 
