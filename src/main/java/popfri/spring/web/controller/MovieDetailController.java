@@ -20,7 +20,7 @@ public class MovieDetailController {
 
     // 영화 상세 정보 조회
     @GetMapping("/{movieId}")
-    public ApiResponse<MovieDetailResponse.Result> loadMovieInformation(@PathVariable("movieId") String movieId) {
+    public ApiResponse<MovieDetailResponse.MovieDetailDTO> loadMovieInformation(@PathVariable("movieId") String movieId) {
         return ApiResponse.onSuccess(movieDetailService.loadMovie(movieId));
     }
 }

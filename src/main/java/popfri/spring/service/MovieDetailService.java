@@ -104,9 +104,9 @@ public class MovieDetailService {
     }
 
     // 영화 상세 정보 호출
-    public MovieDetailResponse.Result loadMovie(String movieId) {
+    public MovieDetailResponse.MovieDetailDTO loadMovie(String movieId) {
         ObjectMapper objectMapper = new ObjectMapper();
-        MovieDetailResponse.Result result = new MovieDetailResponse.Result();
+        MovieDetailResponse.MovieDetailDTO result = new MovieDetailResponse.MovieDetailDTO();
 
         try {
             // 메인 정보
@@ -119,7 +119,7 @@ public class MovieDetailService {
             result.setRelease_date(detailNode.path("release_date").asText());
             result.setOverView(detailNode.path("overview").asText());
             JsonNode genresNode = detailNode.path("genres");
-            List<MovieDetailResponse.Result.Genres> genres = objectMapper.readerForListOf(MovieDetailResponse.Result.Genres.class)
+            List<MovieDetailResponse.MovieDetailDTO.Genres> genres = objectMapper.readerForListOf(MovieDetailResponse.MovieDetailDTO.Genres.class)
                     .readValue(genresNode);
             result.setGenres(genres);
 
@@ -127,8 +127,8 @@ public class MovieDetailService {
             String movieProviders = loadMovieProviders(movieId);
             JsonNode providersNode = objectMapper.readTree(movieProviders).path("results").path("KR").path("flatrate");
             if (providersNode.isArray()) {
-                List<MovieDetailResponse.Result.Providers> providerList =
-                        objectMapper.readerForListOf(MovieDetailResponse.Result.Providers.class)
+                List<MovieDetailResponse.MovieDetailDTO.Providers> providerList =
+                        objectMapper.readerForListOf(MovieDetailResponse.MovieDetailDTO.Providers.class)
                                 .readValue(providersNode);
                 result.setProviders(providerList);
             }
@@ -140,8 +140,8 @@ public class MovieDetailService {
             for (int i = 0; i < Math.min(5, castNode.size()); i++) {
                 limitedCastList.add(castNode.get(i));
             }
-            List<MovieDetailResponse.Result.Cast> castList =
-                    objectMapper.readerForListOf(MovieDetailResponse.Result.Cast.class)
+            List<MovieDetailResponse.MovieDetailDTO.Cast> castList =
+                    objectMapper.readerForListOf(MovieDetailResponse.MovieDetailDTO.Cast.class)
                             .readValue(objectMapper.writeValueAsString(limitedCastList));
             result.setCast(castList);
 
@@ -163,8 +163,8 @@ public class MovieDetailService {
             for (int i = 0; i < Math.min(7, videosNode.size()); i++) {
                 limitedVideos.add(videosNode.get(i));
             }
-            List<MovieDetailResponse.Result.Videos> videosList =
-                    objectMapper.readerForListOf(MovieDetailResponse.Result.Videos.class)
+            List<MovieDetailResponse.MovieDetailDTO.Videos> videosList =
+                    objectMapper.readerForListOf(MovieDetailResponse.MovieDetailDTO.Videos.class)
                             .readValue(objectMapper.writeValueAsString(limitedVideos));
             result.setVideos(videosList);
 
@@ -175,8 +175,8 @@ public class MovieDetailService {
             for (int i = 0; i < Math.min(7, backdropsNode.size()); i++) {
                 limitedBackdrops.add(backdropsNode.get(i));
             }
-            List<MovieDetailResponse.Result.Images> imagesList =
-                    objectMapper.readerForListOf(MovieDetailResponse.Result.Images.class)
+            List<MovieDetailResponse.MovieDetailDTO.Images> imagesList =
+                    objectMapper.readerForListOf(MovieDetailResponse.MovieDetailDTO.Images.class)
                             .readValue(objectMapper.writeValueAsString(limitedBackdrops));
             result.setImages(imagesList);
 

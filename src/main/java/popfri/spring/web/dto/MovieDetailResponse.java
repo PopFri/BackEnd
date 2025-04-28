@@ -15,7 +15,7 @@ public class MovieDetailResponse {
     @AllArgsConstructor
     @Getter
     @Setter
-    public static class Result {
+    public static class MovieDetailDTO {
         private String backgroundImageUrl;
         private String imageUrl;
         private String title;
