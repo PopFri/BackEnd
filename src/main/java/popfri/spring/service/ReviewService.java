@@ -37,7 +37,7 @@ public class ReviewService {
 
     // 리뷰 생성
     @Transactional
-    public void createReview(ReviewResponse.ReviewRequestDTO reviewRequest) {
+    public ReviewResponse.ReviewResponseDTO createReview(ReviewResponse.ReviewRequestDTO reviewRequest) {
         User user = userRepository.findById(reviewRequest.getUserId())
                 .orElseThrow(() -> new MovieHandler(ErrorStatus._USER_NOT_EXIST));
 
@@ -59,6 +59,13 @@ public class ReviewService {
                     .dislikeReview(new ArrayList<>())
                     .build();
             reviewRepository.save(review);
+            return ReviewResponse.ReviewResponseDTO.builder()
+                    .reviewId(review.getReviewId())
+                    .userId(review.getUser().getUserId())
+                    .movieId(review.getMovieId())
+                    .createdAt(review.getCreatedAt())
+                    .reviewContent(review.getReviewContent())
+                    .build();
         }
     }
 
@@ -91,18 +98,22 @@ public class ReviewService {
                 .collect(Collectors.toList());
     }
 
+    // 리뷰 좋아요/싫어요 여부 확인
     public enum ReviewActionType {
         LIKE, DISLIKE
     }
 
+    // 리뷰 좋아요 여부 확인
     public boolean hasUserLikedReview(User user, Review review) {
         return likeReviewRepository.existsByUserAndReview(user, review);
     }
 
+    // 리뷰 싫어요 여부 확인
     public boolean hasUserDislikedReview(User user, Review review) {
         return dislikeReviewRepository.existsByUserAndReview(user, review);
     }
 
+    // 리뷰 좋아요/싫어요 처리
     @Transactional
     public void handleReviewReaction(ReviewResponse.ReviewLikeDTO reviewLikeRequest, ReviewActionType actionType) {
         Long userId = reviewLikeRequest.getUserId();

@@ -1,9 +1,11 @@
 package popfri.spring.web.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import popfri.spring.apiPayload.ApiResponse;
 import popfri.spring.service.ReviewService;
 import popfri.spring.web.dto.ReviewResponse;
 
@@ -18,38 +20,44 @@ public class ReviewController {
 
     // 리뷰 작성
     @PostMapping("/review")
-    public void createReview(ReviewResponse.ReviewRequestDTO reviewRequest) {
-        reviewService.createReview(reviewRequest);
+    @Operation(summary = "리뷰 작성", description = "작성된 리뷰 정보 저장.")
+    public ApiResponse<ReviewResponse.ReviewResponseDTO> createReview(ReviewResponse.ReviewRequestDTO reviewRequest) {
+        return ApiResponse.onSuccess(reviewService.createReview(reviewRequest));
     }
 
     // 리뷰 좋아요
     @PostMapping("/review/like")
+    @Operation(summary = "리뷰 좋아요", description = "해당 리뷰에 좋아요 표시.")
     public void likeReview(ReviewResponse.ReviewLikeDTO reviewLikeRequest) {
         reviewService.handleReviewReaction(reviewLikeRequest, ReviewService.ReviewActionType.LIKE);
     }
 
     // 리뷰 싫어요
     @PostMapping("/review/dislike")
+    @Operation(summary = "리뷰 싫어요", description = "해당 리뷰에 싫어요 표시.")
     public void dislikeReview(ReviewResponse.ReviewLikeDTO reviewDislikeRequest) {
         reviewService.handleReviewReaction(reviewDislikeRequest, ReviewService.ReviewActionType.DISLIKE);
     }
 
     // 리뷰 최신순 조회
     @GetMapping("/review/{movieId}")
-    public List<ReviewResponse.ReviewResponseDTO> getReviews(@Parameter String movieId) {
+    @Operation(summary = "리뷰 최신순 조회", description = "해당 영화의 리뷰들을 최신순으로 조회.")
+    public ApiResponse<List<ReviewResponse.ReviewResponseDTO>> getReviews(@Parameter String movieId) {
         Long movieIdLong = Long.parseLong(movieId);
-        return reviewService.getReviewsByMovieId(movieIdLong);
+        return ApiResponse.onSuccess(reviewService.getReviewsByMovieId(movieIdLong));
     }
 
     // 리뷰 좋아요 순 조회
     @GetMapping("/review/{movieId}/like")
-    public List<ReviewResponse.ReviewResponseDTO> getReviewsOrderByLike(@Parameter String movieId) {
+    @Operation(summary = "리뷰 좋아요 순 조회", description = "해당 영화의 리뷰들을 좋아요와 싫어요의 계산식으로 정렬하여 조회.")
+    public ApiResponse<List<ReviewResponse.ReviewResponseDTO>> getReviewsOrderByLike(@Parameter String movieId) {
         Long movieIdLong = Long.parseLong(movieId);
-        return reviewService.getReviewByMovieIdOrderByLike(movieIdLong);
+        return ApiResponse.onSuccess(reviewService.getReviewByMovieIdOrderByLike(movieIdLong));
     }
 
     // 리뷰 삭제
     @DeleteMapping("/review/{reviewId}")
+    @Operation(summary = "리뷰 삭제", description = "해당 리뷰 삭제")
     public void deleteReview(@Parameter String reviewId) {
         Long reviewIdLong = Long.parseLong(reviewId);
         reviewService.deleteReview(reviewIdLong);
