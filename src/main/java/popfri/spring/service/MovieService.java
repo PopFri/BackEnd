@@ -209,7 +209,8 @@ public class MovieService {
     //GPT 상황별 영화 추천
     public String getSitMovieToGPT(String situation){
         //WebClient build
-        String prompt = "다음 상황에서 추천하는 영화 이름을 출력해줘.\n " + situation + "\n 다른 부연설명이나 외적 설정(ex. \"\", 각종 이모지) 없이 영화 제목만 출력해줘.";
+        String prompt = "다음 상황에서 추천하는 영화 이름을 출력해줘. 영화는 반드시 존재하는 영화로 추천해야 하고, 자체적으로 유추한 영화가 출력되어서는 안돼.\n "
+                + situation + "\n 다른 부연설명이나 외적 설정(ex. \"\", 각종 이모지) 없이 영화 제목만 출력해줘.";
         GPTRequest.gptReqDTO request = new GPTRequest.gptReqDTO(gptModel, prompt);
         WebClient webClient = WebClient.builder()
                 .baseUrl(gptUrl)
@@ -244,7 +245,7 @@ public class MovieService {
         log.info("Current Time: " + now);
 
         //WebClient build
-        String prompt = "다음으로 주어지는 시간에 어울리는 영화 이름을 출력해줘.\n "
+        String prompt = "다음으로 주어지는 시간에 어울리는 영화 이름을 출력해줘. 영화는 반드시 존재하는 영화로 추천해야 하고, 자체적으로 유추한 영화가 출력되어서는 안돼.\n "
                 + now + "\n 다른 부연설명이나 외적 설정(ex. \"\", 각종 이모지) 없이 영화 제목만 출력해줘. (ex. 인터스텔라)";
         GPTRequest.gptReqDTO request = new GPTRequest.gptReqDTO(gptModel, prompt);
         WebClient webClient = WebClient.builder()
