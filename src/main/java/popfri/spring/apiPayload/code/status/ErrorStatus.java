@@ -21,6 +21,12 @@ public enum ErrorStatus implements BaseErrorCode {
 
     //Movie 관련 에러
     _MOVIE_NOT_EXIST(HttpStatus.INTERNAL_SERVER_ERROR, "MOVIE5001", "존재하지 않는 영화입니다."),
+
+    //TMDB 관련 에러
+    _TMDB_CONNECT_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "TMDB5001", "TMDB 응답 요청 중 에러가 발생했습니다"),
+
+    //GPT 관련 에러
+    _GPT_CONNECT_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "GPT5001", "GPT 응답 요청 중 에러가 발생했습니다"),
     ;
 
     private final HttpStatus httpStatus;

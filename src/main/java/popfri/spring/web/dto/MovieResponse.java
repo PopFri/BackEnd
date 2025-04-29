@@ -1,6 +1,7 @@
 package popfri.spring.web.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 import java.util.List;
@@ -68,5 +69,34 @@ public class MovieResponse {
             String file_path;
         }
     }
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Schema(title = "MOVIE_RES_01 : 영화 추천 리스트 응답")
+    public static class RecMovieResDTO {
+        Integer movieId;
+        String movieName;
+        String imageUrl;
+    }
 
+    @Data
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Schema(title = "TMDB_RES_01 : 영화 검색 응답")
+    public static class TmdbMovieRecResDTO {
+        Integer page;
+        List<Result> results;
+        @Data
+        @Getter
+        @AllArgsConstructor
+        @NoArgsConstructor
+        public static class Result{
+            Integer id;
+            String title;
+            Double popularity;
+            String poster_path;
+        }
+    }
 }
