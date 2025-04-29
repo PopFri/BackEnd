@@ -7,8 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import popfri.spring.apiPayload.ApiResponse;
 import popfri.spring.domain.User;
+import popfri.spring.domain.enums.RecType;
 import popfri.spring.jwt.CookieUtil;
 import popfri.spring.jwt.JWTUtil;
+import popfri.spring.service.HistoryService;
 import popfri.spring.service.MovieService;
 import popfri.spring.service.UserService;
 import popfri.spring.web.dto.MovieResponse;
@@ -25,6 +27,7 @@ public class MovieController {
     private final JWTUtil jwtUtil;
     private final UserService userService;
     private final MovieService movieDetailService;
+    private final HistoryService historyService;
 
     // 영화 상세 정보 조회
     @GetMapping("/{movieId}")
@@ -41,11 +44,16 @@ public class MovieController {
         User user = userService.getUser(jwtUtil.getProvideId(token));
 
         String GPTAnswer = movieDetailService.getSitMovieToGPT(situation);
-        List<MovieResponse.RecMovieResDTO> response = new ArrayList<>();
 
+        List<MovieResponse.RecMovieResDTO> response = new ArrayList<>();
+        //처음 응답 저장
         MovieResponse.RecMovieResDTO movie = movieDetailService.getMovieIdToName(GPTAnswer);
         response.add(movie);
+        //이후 응답 저장
         response.addAll(movieDetailService.recommendMovieFromTMDB(movie.getMovieId()));
+
+        //추천 기록 저장
+        historyService.saveRecHistory(user, response, RecType.SITUATION);
 
         return ApiResponse.onSuccess(response);
     }

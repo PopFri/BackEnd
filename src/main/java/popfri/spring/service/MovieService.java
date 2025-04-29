@@ -2,6 +2,8 @@ package popfri.spring.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -23,6 +25,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class MovieService {
     private final OkHttpClient client = new OkHttpClient();
 
@@ -226,6 +230,7 @@ public class MovieService {
 
         //save response
         if (response != null) {
+            log.info("Situation GPT Answer: " + response.getChoices().get(0).getMessage().getContent());
             return response.getChoices().get(0).getMessage().getContent();
         } else {
             throw new MovieHandler(ErrorStatus._GPT_CONNECT_FAIL);
