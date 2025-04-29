@@ -69,4 +69,13 @@ public class MovieResponse {
         }
     }
 
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    @Setter
+    public static class MovieReviewDTO {
+        private String movieName;
+        private String posterUrl;
+    }
 }

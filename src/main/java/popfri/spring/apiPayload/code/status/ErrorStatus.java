@@ -21,6 +21,10 @@ public enum ErrorStatus implements BaseErrorCode {
 
     //Movie 관련 에러
     _MOVIE_NOT_EXIST(HttpStatus.INTERNAL_SERVER_ERROR, "MOVIE5001", "존재하지 않는 영화입니다."),
+
+    //Review 관련 에러
+    _REVIEW_NOT_EXIST(HttpStatus.INTERNAL_SERVER_ERROR, "REVIEW5001", "존재하지 않는 리뷰입니다."),
+    _REVIEW_ALREADY_EXIST(HttpStatus.INTERNAL_SERVER_ERROR, "REVIEW5002", "이미 존재하는 리뷰입니다."),
     ;
 
     private final HttpStatus httpStatus;

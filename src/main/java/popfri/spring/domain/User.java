@@ -3,6 +3,8 @@ package popfri.spring.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 @Entity
 @Getter
 @Setter
@@ -29,4 +31,13 @@ public class User {
 
     @Column(name = "login_type", length = 10)
     private String loginType;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Review> review;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<LikeReview> likeReview;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<DislikeReview> dislikeReview;
 }
