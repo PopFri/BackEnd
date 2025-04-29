@@ -23,7 +23,7 @@ public class HistoryService {
         List<RecHistory> result = responseList.stream()
                 .map(response -> {
                     Optional<RecHistory> recHistory = historyList.stream()
-                            .filter(history -> Objects.equals(history.getTmdbId(), response.getMovieId()))
+                            .filter(history -> Objects.equals(history.getTmdbId(), response.getMovieId()) && history.getRecType().equals(recType))
                             .findAny();
 
                     if(recHistory.isPresent()) {
@@ -36,7 +36,7 @@ public class HistoryService {
                                 .tmdbId(response.getMovieId())
                                 .movieName(response.getMovieName())
                                 .posterUrl(response.getImageUrl())
-                                .recCnt(0)
+                                .recCnt(1)
                                 .user(user)
                                 .build();
                     }

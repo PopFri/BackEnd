@@ -57,4 +57,25 @@ public class MovieController {
 
         return ApiResponse.onSuccess(response);
     }
+
+    @GetMapping("/recom/time")
+    @Operation(summary = "시간별 영화 추천", description = "현재 시간대에 어울리는 추천 영화를 반환")
+    public ApiResponse<List<MovieResponse.RecMovieResDTO>> recTimeMovie(HttpServletRequest http){
+        String token = CookieUtil.getCookieValue(http, "Authorization");
+        User user = userService.getUser(jwtUtil.getProvideId(token));
+
+        String GPTAnswer = movieDetailService.getTimeMovieToGPT();
+
+        List<MovieResponse.RecMovieResDTO> response = new ArrayList<>();
+        //처음 응답 저장
+        MovieResponse.RecMovieResDTO movie = movieDetailService.getMovieIdToName(GPTAnswer);
+        response.add(movie);
+        //이후 응답 저장
+        response.addAll(movieDetailService.recommendMovieFromTMDB(movie.getMovieId()));
+
+        //추천 기록 저장
+        historyService.saveRecHistory(user, response, RecType.TIME);
+
+        return ApiResponse.onSuccess(response);
+    }
 }
