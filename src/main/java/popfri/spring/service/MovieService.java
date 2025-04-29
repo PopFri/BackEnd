@@ -239,7 +239,7 @@ public class MovieService {
         }
     }
 
-    //GPT 상황별 영화 추천
+    //GPT 시간별 영화 추천
     public String getTimeMovieToGPT(){
         LocalTime now = LocalTime.now();
         log.info("Current Time: " + now);
