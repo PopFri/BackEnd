@@ -28,15 +28,17 @@ public class ReviewController {
     // 리뷰 좋아요
     @PostMapping("/review/like")
     @Operation(summary = "리뷰 좋아요", description = "해당 리뷰에 좋아요 표시.")
-    public void likeReview(ReviewResponse.ReviewLikeDTO reviewLikeRequest) {
+    public ApiResponse<Boolean> likeReview(ReviewResponse.ReviewLikeDTO reviewLikeRequest) {
         reviewService.handleReviewReaction(reviewLikeRequest, ReviewService.ReviewActionType.LIKE);
+        return ApiResponse.onSuccess(true);
     }
 
     // 리뷰 싫어요
     @PostMapping("/review/dislike")
     @Operation(summary = "리뷰 싫어요", description = "해당 리뷰에 싫어요 표시.")
-    public void dislikeReview(ReviewResponse.ReviewLikeDTO reviewDislikeRequest) {
+    public ApiResponse<Boolean> dislikeReview(ReviewResponse.ReviewLikeDTO reviewDislikeRequest) {
         reviewService.handleReviewReaction(reviewDislikeRequest, ReviewService.ReviewActionType.DISLIKE);
+        return ApiResponse.onSuccess(true);
     }
 
     // 리뷰 최신순 조회
@@ -58,8 +60,9 @@ public class ReviewController {
     // 리뷰 삭제
     @DeleteMapping("/review/{reviewId}")
     @Operation(summary = "리뷰 삭제", description = "해당 리뷰 삭제")
-    public void deleteReview(@Parameter String reviewId) {
+    public ApiResponse<Boolean> deleteReview(@Parameter String reviewId) {
         Long reviewIdLong = Long.parseLong(reviewId);
         reviewService.deleteReview(reviewIdLong);
+        return ApiResponse.onSuccess(true);
     }
 }
