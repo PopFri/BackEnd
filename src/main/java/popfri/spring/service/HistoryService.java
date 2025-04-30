@@ -81,4 +81,8 @@ public class HistoryService {
                     .build());
         }
     }
+
+    public List<VisitHistory> getVisitHistory(User user){
+        return visitHistoryRepository.findByUserOrderByUpdatedAtDesc(user);
+    }
 }
