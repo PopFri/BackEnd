@@ -65,7 +65,7 @@ public class ReviewService {
     public List<ReviewResponse.ReviewResponseDTO> getReviewsByMovieId(Long movieId) {
         List<Review> reviews = reviewRepository.findByMovieIdOrderByCreatedAtDesc(movieId);
         if(reviews.isEmpty()) {
-            throw new ReviewHandler(ErrorStatus._REVIEW_NOT_EXIST);
+            return List.of();
         }
         return reviews.stream()
                 .map(review -> ReviewResponse.ReviewResponseDTO.builder()
@@ -82,7 +82,7 @@ public class ReviewService {
     public List<ReviewResponse.ReviewResponseDTO> getReviewByMovieIdOrderByLike(Long movieId) {
         List<Review> reviews = reviewRepository.findReviewsByMovieIdOrderByScore(movieId);
         if(reviews.isEmpty()) {
-            throw new ReviewHandler(ErrorStatus._REVIEW_NOT_EXIST);
+            return List.of();
         }
         return reviews.stream()
                 .map(review -> ReviewResponse.ReviewResponseDTO.builder()
@@ -166,7 +166,7 @@ public class ReviewService {
                 .orElseThrow(() -> new MovieHandler(ErrorStatus._USER_NOT_EXIST));
         List<Review> reviews = reviewRepository.findByUser(user);
         if(reviews.isEmpty()) {
-            throw new ReviewHandler(ErrorStatus._REVIEW_NOT_EXIST);
+            return List.of();
         }
         return reviews.stream()
                 .map(review -> ReviewResponse.UserReviewListDTO.builder()
