@@ -14,7 +14,7 @@ public class HistoryConverter {
     public static HistoryResponse.RecHistoryGetResDTO getRecHistoryDto(List<RecHistory> historyList, String recType){
         //날짜로 grouping
         Map<LocalDate, List<RecHistory>> groupList = historyList.stream()
-                .collect(Collectors.groupingBy(history -> history.getCreatedAt().toLocalDate()));
+                .collect(Collectors.groupingBy(history -> history.getUpdatedAt().toLocalDate()));
 
         //build response
         List<HistoryResponse.HistoryResDTO> response = groupList.keySet().stream().map(date -> HistoryResponse.HistoryResDTO.builder()

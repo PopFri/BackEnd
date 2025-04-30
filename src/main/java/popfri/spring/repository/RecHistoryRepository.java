@@ -9,6 +9,6 @@ import java.util.List;
 
 public interface RecHistoryRepository extends JpaRepository<RecHistory, Long> {
     List<RecHistory> findByUser(User user);
-    List<RecHistory> findDistinctTop10ByUserOrderByCreatedAtDesc(User user);
+    List<RecHistory> findDistinctTop10ByUserOrderByUpdatedAtDesc(User user);
     List<RecHistory> findByUserAndRecType(User user, RecType recType);
 }
