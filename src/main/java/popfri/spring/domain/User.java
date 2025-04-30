@@ -3,7 +3,6 @@ package popfri.spring.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -34,5 +33,8 @@ public class User {
     private String loginType;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<RecHistory> userFolderList = new ArrayList<>();
+    private List<RecHistory> userFolderList;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Review> review;
 }
