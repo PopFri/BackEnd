@@ -6,8 +6,11 @@ import popfri.spring.apiPayload.code.status.ErrorStatus;
 import popfri.spring.apiPayload.exception.handler.HistoryHandler;
 import popfri.spring.domain.RecHistory;
 import popfri.spring.domain.User;
+import popfri.spring.domain.VisitHistory;
 import popfri.spring.domain.enums.RecType;
 import popfri.spring.repository.RecHistoryRepository;
+import popfri.spring.repository.VisitHistoryRepository;
+import popfri.spring.web.dto.HistoryRequest;
 import popfri.spring.web.dto.MovieResponse;
 
 import java.util.List;
@@ -18,6 +21,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class HistoryService {
     private final RecHistoryRepository recHistoryRepository;
+    private final VisitHistoryRepository visitHistoryRepository;
 
     public void saveRecHistory(User user, List<MovieResponse.RecMovieResDTO> responseList, RecType recType){
         List<RecHistory> historyList = recHistoryRepository.findByUser(user);
@@ -57,5 +61,24 @@ public class HistoryService {
             case "popfri" -> recHistoryRepository.findByUserAndRecType(user, RecType.POPFRI);
             default -> throw new HistoryHandler(ErrorStatus._OPTION_NOT_EXIST);
         };
+    }
+
+    //방문 기록 저장 서비스
+    public void saveVisitHistory(User user, HistoryRequest.AddVisitHisDto request){
+        Optional<VisitHistory> oldVisitHistory = visitHistoryRepository.findByUserAndTmdbId(user, request.getMovieId());
+
+        if(oldVisitHistory.isPresent()){
+            VisitHistory visitHistory = oldVisitHistory.get();
+            visitHistory.setVisitCnt(visitHistory.getVisitCnt() + 1);
+            visitHistoryRepository.save(visitHistory);
+        } else {
+            visitHistoryRepository.save(VisitHistory.builder()
+                    .user(user)
+                    .tmdbId(request.getMovieId())
+                    .movieName(request.getMovieName())
+                    .posterUrl(request.getImageUrl())
+                    .visitCnt(1)
+                    .build());
+        }
     }
 }

@@ -4,10 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import popfri.spring.apiPayload.ApiResponse;
 import popfri.spring.converter.HistoryConverter;
 import popfri.spring.converter.UserConverter;
@@ -17,6 +14,7 @@ import popfri.spring.jwt.JWTUtil;
 import popfri.spring.service.HistoryService;
 import popfri.spring.service.ReviewService;
 import popfri.spring.service.UserService;
+import popfri.spring.web.dto.HistoryRequest;
 import popfri.spring.web.dto.ReviewResponse;
 import popfri.spring.web.dto.HistoryResponse;
 import popfri.spring.web.dto.UserResponse;
@@ -58,5 +56,16 @@ public class UserController {
         User user = userService.getUser(jwtUtil.getProvideId(token));
 
         return ApiResponse.onSuccess(HistoryConverter.getRecHistoryDto(historyService.getRecHistory(user, option), option));
+    }
+
+    @PostMapping("/movie/visit")
+    @Operation(summary = "유저 방문 기록 저장", description = "유저가 방문한 영화 정보 저장")
+    public ApiResponse<Boolean> addVisitHistory(HttpServletRequest http, @RequestBody HistoryRequest.AddVisitHisDto request) {
+        String token = CookieUtil.getCookieValue(http, "Authorization");
+        User user = userService.getUser(jwtUtil.getProvideId(token));
+
+        historyService.saveVisitHistory(user, request);
+
+        return ApiResponse.onSuccess(true);
     }
 }
