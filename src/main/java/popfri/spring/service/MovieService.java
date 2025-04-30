@@ -18,6 +18,8 @@ import popfri.spring.web.dto.GPTResponse;
 import popfri.spring.web.dto.MovieResponse;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -36,6 +38,9 @@ public class MovieService {
     private final String gptUrl = "https://api.openai.com/v1/chat/completions";
     @Value("${OPENAI_API_KEY}")
     private String gptKey;
+
+    @Value("${KOFIC_API_KEY}")
+    private String koficKey;
 
     // movie detail api 호출
     public String loadMovieDetail(String movieId) {
@@ -345,5 +350,79 @@ public class MovieService {
                     .toList();
         } else
             throw new MovieHandler(ErrorStatus._TMDB_CONNECT_FAIL);
+    }
+
+    // 영화 제목으로 TMDB API 호출
+    public MovieResponse.TmdbDataByTitleDTO searchTmdbMovieByTitle(String title) {
+        WebClient webClient = WebClient.builder()
+                .baseUrl("https://api.themoviedb.org/3/search/movie")
+                .defaultHeader("Authorization", "Bearer " + tmdbKey)
+                .build();
+
+        MovieResponse.TmdbDataByTitleListDTO movieList = webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .queryParam("query", title)
+                        .queryParam("include_adult", false)
+                        .queryParam("language", "ko")
+                        .queryParam("page", "1")
+                        .build())
+                .retrieve()
+                .bodyToMono(MovieResponse.TmdbDataByTitleListDTO.class)
+                .block();
+
+        if(movieList == null) {
+            throw new MovieHandler(ErrorStatus._TMDB_CONNECT_FAIL);
+        }
+
+        return movieList.getMovieDataList().stream()
+                .max(Comparator.comparingDouble(MovieResponse.TmdbDataByTitleDTO::getPopularity))
+                .orElse(null);
+    }
+
+    // 박스오피스 랭킹 반환
+    public List<MovieResponse.MovieRankingDTO> getBoxofficeRanking(String date) {
+        List<MovieResponse.MovieRankingDTO> rankingList = new ArrayList<>();
+        String url = "http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json";
+        WebClient webClient = WebClient.builder()
+                .baseUrl(url)
+                .build();
+        MovieResponse.BoxofficeMovieDataDTO rankingMovie;
+        rankingMovie = webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .queryParam("key", koficKey)
+                        .queryParam("targetDt", date)
+                        .build())
+                .retrieve()
+                .bodyToMono(MovieResponse.BoxofficeMovieDataDTO.class)
+                .block();
+        if(rankingMovie == null) {
+            throw new MovieHandler(ErrorStatus._KOFIC_CONNECT_FAIL);
+        } else if(rankingMovie.getBoxOfficeResult().getMovieDataList().isEmpty()) {
+            throw new MovieHandler(ErrorStatus._MOVIE_DATE_FAIL);
+        }
+
+        for(MovieResponse.BoxofficeMovieDataDTO.BoxofficeResult.MovieData movieData : rankingMovie.getBoxOfficeResult().getMovieDataList()) {
+            MovieResponse.TmdbDataByTitleDTO tmdbData = searchTmdbMovieByTitle(movieData.getTitle());
+            if(tmdbData == null) {
+                rankingList.add(MovieResponse.MovieRankingDTO.builder()
+                        .rank(movieData.getRank())
+                        .title(movieData.getTitle())
+                        .backgroundImageUrl(null)
+                        .movieId(null)
+                        .overView("정보가 없습니다.")
+                        .imageUrl(null)
+                        .build());
+                continue;
+            }
+            rankingList.add(MovieResponse.MovieRankingDTO.builder()
+                            .rank(movieData.getRank())
+                            .title(movieData.getTitle())
+                            .backgroundImageUrl(tmdbData.getBackgroundImageUrl())
+                            .movieId(tmdbData.getMovieId())
+                            .overView(tmdbData.getOverView())
+                            .imageUrl(tmdbData.getImageUrl())
+                            .build());
+        }
+        return rankingList;
     }
 }

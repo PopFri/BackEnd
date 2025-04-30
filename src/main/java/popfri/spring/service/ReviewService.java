@@ -169,9 +169,6 @@ public class ReviewService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new MovieHandler(ErrorStatus._USER_NOT_EXIST));
         List<Review> reviews = reviewRepository.findByUser(user);
-        if(reviews.isEmpty()) {
-            throw new ReviewHandler(ErrorStatus._REVIEW_NOT_EXIST);
-        }
         return reviews.stream()
                 .map(review -> ReviewResponse.UserReviewListDTO.builder()
                         .reviewId(review.getReviewId())

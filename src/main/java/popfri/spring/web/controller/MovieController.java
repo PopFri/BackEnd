@@ -1,6 +1,7 @@
 package popfri.spring.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -77,5 +78,11 @@ public class MovieController {
         historyService.saveRecHistory(user, response, RecType.TIME);
 
         return ApiResponse.onSuccess(response);
+    }
+
+    @GetMapping("/recom/boxoffice/{date}")
+    @Operation(summary = "박스오피스 순위 반환", description = "사용자에게 날짜를 입력받아 해당 날짜의 박스오피스 순위를 반환")
+    public ApiResponse<List<MovieResponse.MovieRankingDTO>> loadBoxOfficeMovieRanking(@Parameter String date){
+        return ApiResponse.onSuccess(movieDetailService.getBoxofficeRanking(date));
     }
 }

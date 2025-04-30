@@ -30,6 +30,10 @@ public enum ErrorStatus implements BaseErrorCode {
     //TMDB 관련 에러
     _TMDB_CONNECT_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "TMDB5001", "TMDB 응답 요청 중 에러가 발생했습니다"),
 
+    //KOFIC 관련 에러
+    _KOFIC_CONNECT_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "KOFIC5001", "KOFIC 응답 요청 중 에러가 발생했습니다"),
+    _MOVIE_DATE_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "KOFIC500", "해당 날짜의 랭킹 데이터가 없습니다."),
+
     //GPT 관련 에러
     _GPT_CONNECT_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "GPT5001", "GPT 응답 요청 중 에러가 발생했습니다"),
     ;
