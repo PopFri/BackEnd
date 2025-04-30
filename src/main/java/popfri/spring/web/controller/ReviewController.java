@@ -42,7 +42,7 @@ public class ReviewController {
     }
 
     // 리뷰 최신순 조회
-    @GetMapping("/review/{movieId}")
+    @GetMapping("/review/{movieId}/recent")
     @Operation(summary = "리뷰 최신순 조회", description = "해당 영화의 리뷰들을 최신순으로 조회.")
     public ApiResponse<List<ReviewResponse.ReviewResponseDTO>> getReviews(@Parameter String movieId) {
         Long movieIdLong = Long.parseLong(movieId);
@@ -64,5 +64,13 @@ public class ReviewController {
         Long reviewIdLong = Long.parseLong(reviewId);
         reviewService.deleteReview(reviewIdLong);
         return ApiResponse.onSuccess(true);
+    }
+
+    // 유저 리뷰 조회
+    @GetMapping("/review/user/{userId}")
+    @Operation(summary = "유저 리뷰 조회", description = "해당 유저의 리뷰들을 조회.")
+    public ApiResponse<List<ReviewResponse.UserReviewListDTO>> getUserReviews(@Parameter String userId) {
+        Long userIdLong = Long.parseLong(userId);
+        return ApiResponse.onSuccess(reviewService.getReviewsByUserId(userIdLong));
     }
 }

@@ -3,10 +3,9 @@ package popfri.spring.web.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
-import popfri.spring.domain.Review;
-import popfri.spring.domain.User;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -21,8 +20,23 @@ public class ReviewResponse {
         private Long reviewId;
         private Long userId;
         private Long movieId;
-        private LocalDate createdAt;
+        private LocalDateTime createdAt;
         private String reviewContent;
+    }
+
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    @Setter
+    public static class UserReviewListDTO {
+        private Long reviewId;
+        private Long userId;
+        private Long movieId;
+        private String reviewContent;
+        private LocalDateTime createdAt;
+        private String movieName;
+        private String posterUrl;
     }
 
     @Builder
@@ -34,6 +48,8 @@ public class ReviewResponse {
         private Long movieId;
         private String reviewContent;
         private Long userId;
+        private String movieName;
+        private String posterUrl;
     }
 
     @Builder

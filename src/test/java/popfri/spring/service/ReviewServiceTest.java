@@ -13,6 +13,7 @@ import popfri.spring.repository.UserRepository;
 import popfri.spring.web.dto.ReviewResponse;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,14 +43,12 @@ class ReviewServiceTest {
         review = Review.builder()
                 .reviewContent("굿무비")
                 .user(user)
-                .createdAt(LocalDate.now())
+                .createdAt(LocalDateTime.now())
                 .movieId(1L)
                 .movieName("테스트영화")
                 .posterUrl("poster.png")
                 .likeCount(0)
                 .dislikeCount(0)
-                .likeReview(List.of())
-                .dislikeReview(List.of())
                 .build();
         reviewRepository.save(review);
     }

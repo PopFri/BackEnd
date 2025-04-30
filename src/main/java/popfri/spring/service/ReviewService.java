@@ -13,10 +13,9 @@ import popfri.spring.repository.DislikeReviewRepository;
 import popfri.spring.repository.LikeReviewRepository;
 import popfri.spring.repository.ReviewRepository;
 import popfri.spring.repository.UserRepository;
-import popfri.spring.web.dto.MovieResponse;
 import popfri.spring.web.dto.ReviewResponse;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,13 +25,11 @@ public class ReviewService {
     private final LikeReviewRepository likeReviewRepository;
     private final DislikeReviewRepository dislikeReviewRepository;
     private final UserRepository userRepository;
-    private final MovieService movieService;
-    public ReviewService(ReviewRepository reviewRepository, LikeReviewRepository likeReviewRepository, DislikeReviewRepository dislikeReviewRepository, UserRepository userRepository, MovieService movieService) {
+    public ReviewService(ReviewRepository reviewRepository, LikeReviewRepository likeReviewRepository, DislikeReviewRepository dislikeReviewRepository, UserRepository userRepository) {
         this.reviewRepository = reviewRepository;
         this.likeReviewRepository = likeReviewRepository;
         this.dislikeReviewRepository = dislikeReviewRepository;
         this.userRepository = userRepository;
-        this.movieService = movieService;
     }
 
     // 리뷰 생성
@@ -44,19 +41,15 @@ public class ReviewService {
         if(reviewRepository.existsByUserAndMovieId(user, reviewRequest.getMovieId())) {
             throw new ReviewHandler(ErrorStatus._REVIEW_ALREADY_EXIST);
         } else {
-            MovieResponse.MovieReviewDTO movieReviewDTO = movieService.loadMovieReview(reviewRequest.getMovieId().toString());
-
             Review review = Review.builder()
                     .reviewContent(reviewRequest.getReviewContent())
                     .user(user)
-                    .createdAt(LocalDate.now())
+                    .createdAt(LocalDateTime.now())
                     .movieId(reviewRequest.getMovieId())
-                    .movieName(movieReviewDTO.getMovieName())
-                    .posterUrl(movieReviewDTO.getPosterUrl())
+                    .movieName(reviewRequest.getMovieName())
+                    .posterUrl(reviewRequest.getPosterUrl())
                     .likeCount(0)
                     .dislikeCount(0)
-                    .likeReview(new ArrayList<>())
-                    .dislikeReview(new ArrayList<>())
                     .build();
             reviewRepository.save(review);
             return ReviewResponse.ReviewResponseDTO.builder()
@@ -106,16 +99,6 @@ public class ReviewService {
     // 리뷰 좋아요/싫어요 여부 확인
     public enum ReviewActionType {
         LIKE, DISLIKE
-    }
-
-    // 리뷰 좋아요 여부 확인
-    public boolean hasUserLikedReview(User user, Review review) {
-        return likeReviewRepository.existsByUserAndReview(user, review);
-    }
-
-    // 리뷰 싫어요 여부 확인
-    public boolean hasUserDislikedReview(User user, Review review) {
-        return dislikeReviewRepository.existsByUserAndReview(user, review);
     }
 
     // 리뷰 좋아요/싫어요 처리
@@ -179,5 +162,26 @@ public class ReviewService {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewHandler(ErrorStatus._REVIEW_NOT_EXIST));
         reviewRepository.delete(review);
+    }
+
+    // 유저 리뷰 조회
+    public List<ReviewResponse.UserReviewListDTO> getReviewsByUserId(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new MovieHandler(ErrorStatus._USER_NOT_EXIST));
+        List<Review> reviews = reviewRepository.findByUser(user);
+        if(reviews.isEmpty()) {
+            throw new ReviewHandler(ErrorStatus._REVIEW_NOT_EXIST);
+        }
+        return reviews.stream()
+                .map(review -> ReviewResponse.UserReviewListDTO.builder()
+                        .reviewId(review.getReviewId())
+                        .userId(review.getUser().getUserId())
+                        .movieId(review.getMovieId())
+                        .movieName(review.getMovieName())
+                        .posterUrl(review.getPosterUrl())
+                        .createdAt(review.getCreatedAt())
+                        .reviewContent(review.getReviewContent())
+                        .build())
+                .collect(Collectors.toList());
     }
 }

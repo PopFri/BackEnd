@@ -101,23 +101,6 @@ public class MovieService {
         }
     }
 
-    // 리뷰에 들어갈 영화 제목, 포스터 정보 호출
-    public MovieResponse.MovieReviewDTO loadMovieReview(String movieId) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        MovieResponse.MovieReviewDTO result = new MovieResponse.MovieReviewDTO();
-
-        try {
-            // 메인 정보
-            String movieDetail = loadMovieDetail(movieId);
-            JsonNode detailNode = objectMapper.readTree(movieDetail);
-            result.setPosterUrl(detailNode.path("poster_path").asText());
-            result.setMovieName(detailNode.path("title").asText());
-        } catch (IOException e) {
-            throw new MovieHandler(ErrorStatus._INTERNAL_SERVER_ERROR);
-        }
-        return result;
-    }
-
     // 영화 상세 정보 호출
     public MovieResponse.MovieDetailDTO loadMovie(String movieId) {
         ObjectMapper objectMapper = new ObjectMapper();

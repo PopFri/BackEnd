@@ -68,14 +68,4 @@ public class MovieResponse {
             String file_path;
         }
     }
-
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Getter
-    @Setter
-    public static class MovieReviewDTO {
-        private String movieName;
-        private String posterUrl;
-    }
 }

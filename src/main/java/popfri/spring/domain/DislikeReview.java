@@ -11,7 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 public class DislikeReview {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "dislike_id")
     private Long dislikeId;
 

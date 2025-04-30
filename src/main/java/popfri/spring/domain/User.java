@@ -34,10 +34,4 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Review> review;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<LikeReview> likeReview;
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<DislikeReview> dislikeReview;
 }
