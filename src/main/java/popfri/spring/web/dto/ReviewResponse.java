@@ -44,7 +44,6 @@ public class ReviewResponse {
     public static class ReviewRequestDTO {
         private Long movieId;
         private String reviewContent;
-        private Long userId;
         private String movieName;
         private String posterUrl;
     }

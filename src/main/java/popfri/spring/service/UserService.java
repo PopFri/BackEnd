@@ -6,7 +6,6 @@ import popfri.spring.apiPayload.code.status.ErrorStatus;
 import popfri.spring.apiPayload.exception.handler.UserHandler;
 import popfri.spring.domain.User;
 import popfri.spring.repository.UserRepository;
-import popfri.spring.web.dto.UserResponse;
 
 @Service
 @RequiredArgsConstructor

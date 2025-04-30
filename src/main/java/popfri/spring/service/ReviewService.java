@@ -16,7 +16,7 @@ import popfri.spring.repository.UserRepository;
 import popfri.spring.web.dto.ReviewResponse;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,9 +34,7 @@ public class ReviewService {
 
     // 리뷰 생성
     @Transactional
-    public ReviewResponse.ReviewResponseDTO createReview(ReviewResponse.ReviewRequestDTO reviewRequest) {
-        User user = userRepository.findById(reviewRequest.getUserId())
-                .orElseThrow(() -> new MovieHandler(ErrorStatus._USER_NOT_EXIST));
+    public ReviewResponse.ReviewResponseDTO createReview(ReviewResponse.ReviewRequestDTO reviewRequest, User user) {
 
         if(reviewRepository.existsByUserAndMovieId(user, reviewRequest.getMovieId())) {
             throw new ReviewHandler(ErrorStatus._REVIEW_ALREADY_EXIST);
@@ -103,12 +101,8 @@ public class ReviewService {
 
     // 리뷰 좋아요/싫어요 처리
     @Transactional
-    public void handleReviewReaction(ReviewResponse.ReviewLikeDTO reviewLikeRequest, ReviewActionType actionType) {
-        Long userId = reviewLikeRequest.getUserId();
+    public void handleReviewReaction(ReviewResponse.ReviewLikeDTO reviewLikeRequest, ReviewActionType actionType, User user) {
         Long reviewId = reviewLikeRequest.getReviewId();
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new MovieHandler(ErrorStatus._USER_NOT_EXIST));
 
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewHandler(ErrorStatus._REVIEW_NOT_EXIST));
