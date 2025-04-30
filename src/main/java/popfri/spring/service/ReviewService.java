@@ -161,6 +161,8 @@ public class ReviewService {
     public void deleteReview(Long reviewId) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewHandler(ErrorStatus._REVIEW_NOT_EXIST));
+        likeReviewRepository.deleteAllByReview(review);
+        dislikeReviewRepository.deleteAllByReview(review);
         reviewRepository.delete(review);
     }
 

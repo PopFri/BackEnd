@@ -10,4 +10,5 @@ import popfri.spring.domain.User;
 public interface DislikeReviewRepository extends JpaRepository<DislikeReview, Long> {
     boolean existsByUserAndReview(User user, Review review);
     DislikeReview findByUserAndReview(User user, Review review);
+    void deleteAllByReview(Review review);
 }
