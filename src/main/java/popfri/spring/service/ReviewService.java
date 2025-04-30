@@ -64,9 +64,6 @@ public class ReviewService {
     // 영화 별 리뷰 조회 최신순
     public List<ReviewResponse.ReviewResponseDTO> getReviewsByMovieId(Long movieId) {
         List<Review> reviews = reviewRepository.findByMovieIdOrderByCreatedAtDesc(movieId);
-        if(reviews.isEmpty()) {
-            return List.of();
-        }
         return reviews.stream()
                 .map(review -> ReviewResponse.ReviewResponseDTO.builder()
                         .reviewId(review.getReviewId())
@@ -81,9 +78,6 @@ public class ReviewService {
     // 영화 별 리뷰 조회 좋아요순
     public List<ReviewResponse.ReviewResponseDTO> getReviewByMovieIdOrderByLike(Long movieId) {
         List<Review> reviews = reviewRepository.findReviewsByMovieIdOrderByScore(movieId);
-        if(reviews.isEmpty()) {
-            return List.of();
-        }
         return reviews.stream()
                 .map(review -> ReviewResponse.ReviewResponseDTO.builder()
                         .reviewId(review.getReviewId())
@@ -165,9 +159,6 @@ public class ReviewService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new MovieHandler(ErrorStatus._USER_NOT_EXIST));
         List<Review> reviews = reviewRepository.findByUser(user);
-        if(reviews.isEmpty()) {
-            return List.of();
-        }
         return reviews.stream()
                 .map(review -> ReviewResponse.UserReviewListDTO.builder()
                         .reviewId(review.getReviewId())
