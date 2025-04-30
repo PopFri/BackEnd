@@ -9,6 +9,7 @@ import popfri.spring.domain.DislikeReview;
 import popfri.spring.domain.LikeReview;
 import popfri.spring.domain.Review;
 import popfri.spring.domain.User;
+import popfri.spring.domain.enums.ReviewActionType;
 import popfri.spring.repository.DislikeReviewRepository;
 import popfri.spring.repository.LikeReviewRepository;
 import popfri.spring.repository.ReviewRepository;
@@ -63,9 +64,6 @@ public class ReviewService {
     // 영화 별 리뷰 조회 최신순
     public List<ReviewResponse.ReviewResponseDTO> getReviewsByMovieId(Long movieId) {
         List<Review> reviews = reviewRepository.findByMovieIdOrderByCreatedAtDesc(movieId);
-        if(reviews.isEmpty()) {
-            throw new ReviewHandler(ErrorStatus._REVIEW_NOT_EXIST);
-        }
         return reviews.stream()
                 .map(review -> ReviewResponse.ReviewResponseDTO.builder()
                         .reviewId(review.getReviewId())
@@ -80,9 +78,6 @@ public class ReviewService {
     // 영화 별 리뷰 조회 좋아요순
     public List<ReviewResponse.ReviewResponseDTO> getReviewByMovieIdOrderByLike(Long movieId) {
         List<Review> reviews = reviewRepository.findReviewsByMovieIdOrderByScore(movieId);
-        if(reviews.isEmpty()) {
-            throw new ReviewHandler(ErrorStatus._REVIEW_NOT_EXIST);
-        }
         return reviews.stream()
                 .map(review -> ReviewResponse.ReviewResponseDTO.builder()
                         .reviewId(review.getReviewId())
@@ -92,11 +87,6 @@ public class ReviewService {
                         .reviewContent(review.getReviewContent())
                         .build())
                 .collect(Collectors.toList());
-    }
-
-    // 리뷰 좋아요/싫어요 여부 확인
-    public enum ReviewActionType {
-        LIKE, DISLIKE
     }
 
     // 리뷰 좋아요/싫어요 처리
