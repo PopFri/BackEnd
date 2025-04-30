@@ -65,12 +65,4 @@ public class ReviewController {
         reviewService.deleteReview(reviewIdLong);
         return ApiResponse.onSuccess(true);
     }
-
-    // 유저 리뷰 조회
-    @GetMapping("/review/user/{userId}")
-    @Operation(summary = "유저 리뷰 조회", description = "해당 유저의 리뷰들을 조회.")
-    public ApiResponse<List<ReviewResponse.UserReviewListDTO>> getUserReviews(@Parameter String userId) {
-        Long userIdLong = Long.parseLong(userId);
-        return ApiResponse.onSuccess(reviewService.getReviewsByUserId(userIdLong));
-    }
 }
