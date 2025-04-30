@@ -33,5 +33,8 @@ public class User {
     private String loginType;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<RecHistory> userFolderList;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Review> review;
 }

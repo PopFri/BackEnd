@@ -2,24 +2,42 @@ package popfri.spring.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import popfri.spring.apiPayload.code.status.ErrorStatus;
 import popfri.spring.apiPayload.exception.handler.MovieHandler;
+import popfri.spring.web.dto.GPTRequest;
+import popfri.spring.web.dto.GPTResponse;
 import popfri.spring.web.dto.MovieResponse;
 import org.springframework.beans.factory.annotation.Value;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class MovieService {
     private final OkHttpClient client = new OkHttpClient();
 
     @Value("${tmdb.api.key}")
     private String tmdbKey;
+
+    private final String gptModel = "gpt-3.5-turbo";
+    private final String gptUrl = "https://api.openai.com/v1/chat/completions";
+    @Value("${OPENAI_API_KEY}")
+    private String gptKey;
 
     // movie detail api 호출
     public String loadMovieDetail(String movieId) {
@@ -186,5 +204,148 @@ public class MovieService {
         }
 
         return result;
+    }
+
+    //GPT 상황별 영화 추천
+    public String getSitMovieToGPT(String situation){
+        //WebClient build
+        String prompt = "다음 상황에서 추천하는 영화 이름을 출력해줘. 영화는 반드시 존재하는 영화로 추천해야 하고, 자체적으로 유추한 영화가 출력되어서는 안돼.\n "
+                + situation + "\n 다른 부연설명이나 외적 설정(ex. \"\", 각종 이모지) 없이 영화 제목만 출력해줘.";
+        GPTRequest.gptReqDTO request = new GPTRequest.gptReqDTO(gptModel, prompt);
+        WebClient webClient = WebClient.builder()
+                .baseUrl(gptUrl)
+                .defaultHeader("Authorization", "Bearer " + gptKey)
+                .build();
+
+        //connect to GPT
+        GPTResponse.gptResDTO response;
+        try {
+            response = webClient.post()
+                    .uri(gptUrl)
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(GPTResponse.gptResDTO.class)
+                    .block();
+        } catch (WebClientResponseException.BadRequest e) {
+            throw new MovieHandler(ErrorStatus._GPT_CONNECT_FAIL);
+        }
+
+        //save response
+        if (response != null) {
+            log.info("Situation GPT Answer: " + response.getChoices().get(0).getMessage().getContent());
+            return response.getChoices().get(0).getMessage().getContent();
+        } else {
+            throw new MovieHandler(ErrorStatus._GPT_CONNECT_FAIL);
+        }
+    }
+
+    //GPT 시간별 영화 추천
+    public String getTimeMovieToGPT(){
+        LocalTime now = LocalTime.now();
+        log.info("Current Time: " + now);
+
+        //WebClient build
+        String prompt = "다음으로 주어지는 시간에 어울리는 영화 이름을 출력해줘. 영화는 반드시 존재하는 영화로 추천해야 하고, 자체적으로 유추한 영화가 출력되어서는 안돼.\n "
+                + now + "\n 다른 부연설명이나 외적 설정(ex. \"\", 각종 이모지) 없이 영화 제목만 출력해줘. (ex. 인터스텔라)";
+        GPTRequest.gptReqDTO request = new GPTRequest.gptReqDTO(gptModel, prompt);
+        WebClient webClient = WebClient.builder()
+                .baseUrl(gptUrl)
+                .defaultHeader("Authorization", "Bearer " + gptKey)
+                .build();
+
+        //connect to GPT
+        GPTResponse.gptResDTO response;
+        try {
+            response = webClient.post()
+                    .uri(gptUrl)
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(GPTResponse.gptResDTO.class)
+                    .block();
+        } catch (WebClientResponseException.BadRequest e) {
+            throw new MovieHandler(ErrorStatus._GPT_CONNECT_FAIL);
+        }
+
+        //save response
+        if (response != null) {
+            log.info("Situation GPT Answer: " + response.getChoices().get(0).getMessage().getContent());
+            return response.getChoices().get(0).getMessage().getContent();
+        } else {
+            throw new MovieHandler(ErrorStatus._GPT_CONNECT_FAIL);
+        }
+    }
+
+    //TMDB 영화 검색
+    public MovieResponse.RecMovieResDTO getMovieIdToName(String name){
+        //webClient build
+        WebClient webClient = WebClient.builder()
+                .baseUrl("https://api.themoviedb.org/3/search/movie")
+                .defaultHeader("Authorization", "Bearer " + tmdbKey)
+                .build();
+
+        //tmdb connect
+        MovieResponse.TmdbMovieRecResDTO response;
+        response = webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .queryParam("query", name)
+                        .queryParam("include_adult", true)
+                        .queryParam("language", "ko")
+                        .queryParam("region", "ko")
+                        .build())
+                .retrieve()
+                .bodyToMono(MovieResponse.TmdbMovieRecResDTO.class)
+                .block();
+
+        //response build
+        if(response != null) {
+            MovieResponse.TmdbMovieRecResDTO.Result result;
+
+            if (!response.getResults().isEmpty()) {
+                result = response.getResults().stream()
+                        .max(Comparator.comparing(MovieResponse.TmdbMovieRecResDTO.Result::getPopularity))
+                        .get();
+                return MovieResponse.RecMovieResDTO.builder()
+                        .movieId(result.getId())
+                        .movieName(result.getTitle())
+                        .imageUrl(result.getPoster_path())
+                        .build();
+            } else
+                throw new MovieHandler(ErrorStatus._MOVIE_NOT_EXIST);
+        }
+        else
+            throw new MovieHandler(ErrorStatus._TMDB_CONNECT_FAIL);
+    }
+
+    //TMDB 영화 추천
+    public List<MovieResponse.RecMovieResDTO> recommendMovieFromTMDB(Integer movieId){
+        //webClient build
+        WebClient webClient = WebClient.builder()
+                .baseUrl("https://api.themoviedb.org/3")
+                .defaultHeader("Authorization", "Bearer " + tmdbKey)
+                .build();
+
+        //tmdb connect
+        MovieResponse.TmdbMovieRecResDTO response;
+        response = webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/movie/{movieId}/recommendations")
+                        .queryParam("language", "ko")
+                        .build(movieId))
+                .retrieve()
+                .bodyToMono(MovieResponse.TmdbMovieRecResDTO.class)
+                .block();
+
+        //response build
+        if(response != null) {
+            return response.getResults().stream()
+                    .sorted(Comparator.comparing(MovieResponse.TmdbMovieRecResDTO.Result::getPopularity).reversed())
+                    .map(result -> MovieResponse.RecMovieResDTO.builder()
+                            .movieId(result.getId())
+                            .movieName(result.getTitle())
+                            .imageUrl(result.getPoster_path())
+                            .build())
+                    .toList();
+        } else
+            throw new MovieHandler(ErrorStatus._TMDB_CONNECT_FAIL);
     }
 }
