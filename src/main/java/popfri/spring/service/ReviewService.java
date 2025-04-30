@@ -152,12 +152,16 @@ public class ReviewService {
 
     // 리뷰 삭제
     @Transactional
-    public void deleteReview(Long reviewId) {
+    public void deleteReview(Long reviewId, User user) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewHandler(ErrorStatus._REVIEW_NOT_EXIST));
-        likeReviewRepository.deleteAllByReview(review);
-        dislikeReviewRepository.deleteAllByReview(review);
-        reviewRepository.delete(review);
+        if (!review.getUser().getUserId().equals(user.getUserId())) {
+            throw new ReviewHandler(ErrorStatus._REVIEW_NOT_YOUR);
+        } else {
+            likeReviewRepository.deleteAllByReview(review);
+            dislikeReviewRepository.deleteAllByReview(review);
+            reviewRepository.delete(review);
+        }
     }
 
     // 유저 리뷰 조회

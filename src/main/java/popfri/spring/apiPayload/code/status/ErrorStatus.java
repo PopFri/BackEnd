@@ -25,6 +25,7 @@ public enum ErrorStatus implements BaseErrorCode {
     //Review 관련 에러
     _REVIEW_NOT_EXIST(HttpStatus.INTERNAL_SERVER_ERROR, "REVIEW5001", "존재하지 않는 리뷰입니다."),
     _REVIEW_ALREADY_EXIST(HttpStatus.INTERNAL_SERVER_ERROR, "REVIEW5002", "이미 존재하는 리뷰입니다."),
+    _REVIEW_NOT_YOUR(HttpStatus.BAD_REQUEST, "REVIEW5003", "작성자가 아닙니다."),
 
     //TMDB 관련 에러
     _TMDB_CONNECT_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "TMDB5001", "TMDB 응답 요청 중 에러가 발생했습니다"),
