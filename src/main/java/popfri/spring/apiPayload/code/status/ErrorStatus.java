@@ -22,6 +22,9 @@ public enum ErrorStatus implements BaseErrorCode {
     //Movie 관련 에러
     _MOVIE_NOT_EXIST(HttpStatus.INTERNAL_SERVER_ERROR, "MOVIE5001", "존재하지 않는 영화입니다."),
 
+    //History 관련 에러
+    _OPTION_NOT_EXIST(HttpStatus.BAD_REQUEST, "HISTORY4001", "잘못된 옵션값입니다. (option: default, situation, time, popfri)"),
+
     //TMDB 관련 에러
     _TMDB_CONNECT_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "TMDB5001", "TMDB 응답 요청 중 에러가 발생했습니다"),
 
