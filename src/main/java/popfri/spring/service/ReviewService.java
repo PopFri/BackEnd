@@ -9,6 +9,7 @@ import popfri.spring.domain.DislikeReview;
 import popfri.spring.domain.LikeReview;
 import popfri.spring.domain.Review;
 import popfri.spring.domain.User;
+import popfri.spring.domain.enums.ReviewActionType;
 import popfri.spring.repository.DislikeReviewRepository;
 import popfri.spring.repository.LikeReviewRepository;
 import popfri.spring.repository.ReviewRepository;
@@ -92,11 +93,6 @@ public class ReviewService {
                         .reviewContent(review.getReviewContent())
                         .build())
                 .collect(Collectors.toList());
-    }
-
-    // 리뷰 좋아요/싫어요 여부 확인
-    public enum ReviewActionType {
-        LIKE, DISLIKE
     }
 
     // 리뷰 좋아요/싫어요 처리

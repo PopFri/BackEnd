@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import popfri.spring.apiPayload.ApiResponse;
 import popfri.spring.domain.User;
+import popfri.spring.domain.enums.ReviewActionType;
 import popfri.spring.jwt.CookieUtil;
 import popfri.spring.jwt.JWTUtil;
 import popfri.spring.service.ReviewService;
@@ -40,7 +41,7 @@ public class ReviewController {
     public ApiResponse<Boolean> likeReview(ReviewResponse.ReviewLikeDTO reviewLikeRequest, HttpServletRequest http) {
         String token = CookieUtil.getCookieValue(http, "Authorization");
         User user = userService.getUser(jwtUtil.getProvideId(token));
-        reviewService.handleReviewReaction(reviewLikeRequest, ReviewService.ReviewActionType.LIKE, user);
+        reviewService.handleReviewReaction(reviewLikeRequest, ReviewActionType.LIKE, user);
         return ApiResponse.onSuccess(true);
     }
 
@@ -50,7 +51,7 @@ public class ReviewController {
     public ApiResponse<Boolean> dislikeReview(ReviewResponse.ReviewLikeDTO reviewDislikeRequest, HttpServletRequest http) {
         String token = CookieUtil.getCookieValue(http, "Authorization");
         User user = userService.getUser(jwtUtil.getProvideId(token));
-        reviewService.handleReviewReaction(reviewDislikeRequest, ReviewService.ReviewActionType.DISLIKE, user);
+        reviewService.handleReviewReaction(reviewDislikeRequest, ReviewActionType.DISLIKE, user);
         return ApiResponse.onSuccess(true);
     }
 
