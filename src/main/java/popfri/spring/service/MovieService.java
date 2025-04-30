@@ -408,7 +408,7 @@ public class MovieService {
                         .rank(movieData.getRank())
                         .title(movieData.getTitle())
                         .backgroundImageUrl(null)
-                        .movieId(null)
+                        .movieId(0L)
                         .overView("정보가 없습니다.")
                         .imageUrl(null)
                         .build());
