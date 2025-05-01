@@ -8,4 +8,5 @@ import java.util.Optional;
 
 public interface VisitHistoryRepository extends JpaRepository<VisitHistory, Long> {
     Optional<VisitHistory> findByUserAndTmdbId(User user, Integer tmdbId);
+    void deleteByUser(User user);
 }

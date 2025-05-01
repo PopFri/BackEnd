@@ -68,4 +68,13 @@ public class UserController {
 
         return ApiResponse.onSuccess(true);
     }
+
+    @DeleteMapping("/data")
+    @Operation(summary = "유저 활동 기록 삭제", description = "유저의 추천 기록, 방문 기록 삭제")
+    public ApiResponse<Boolean> addVisitHistory(HttpServletRequest http) {
+        String token = CookieUtil.getCookieValue(http, "Authorization");
+        User user = userService.getUser(jwtUtil.getProvideId(token));
+        return ApiResponse.onSuccess(historyService.delHistory(user));
+    }
+
 }
