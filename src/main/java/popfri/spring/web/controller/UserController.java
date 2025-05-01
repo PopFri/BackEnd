@@ -49,7 +49,7 @@ public class UserController {
     }
 
     @GetMapping("/movie/recom")
-    @Operation(summary = "유저 추천 기록 조회", description = "쿠키 내부 토큰과 정렬 방식을 확인해 유저 정보 반환 " +
+    @Operation(summary = "유저 추천 기록 조회", description = "쿠키 내부 토큰과 정렬 방식을 확인해 유저 추천 기록 반환 " +
             "|| option = \"default, situation, time, popfri\"")
     public ApiResponse<HistoryResponse.RecHistoryGetResDTO> getRecHistory(HttpServletRequest http, @RequestParam String option){
         String token = CookieUtil.getCookieValue(http, "Authorization");
@@ -67,6 +67,15 @@ public class UserController {
         historyService.saveVisitHistory(user, request);
 
         return ApiResponse.onSuccess(true);
+    }
+
+    @GetMapping("/movie/visit")
+    @Operation(summary = "유저 방문 기록 조회", description = "쿠키 내부 토큰을 확인해 유저 방문 기록 반환 ")
+    public ApiResponse<List<HistoryResponse.HistoryResDTO>> getVisitHistory(HttpServletRequest http){
+        String token = CookieUtil.getCookieValue(http, "Authorization");
+        User user = userService.getUser(jwtUtil.getProvideId(token));
+
+        return ApiResponse.onSuccess(HistoryConverter.getVisitHistoryDto(historyService.getVisitHistory(user)));
     }
 
     @DeleteMapping("/data")

@@ -56,7 +56,7 @@ public class HistoryService {
     //추천 기록 조회 서비스
     public List<RecHistory> getRecHistory(User user, String option){
         return switch (option) {
-            case "default" -> recHistoryRepository.findDistinctTop10ByUserOrderByCreatedAtDesc(user);
+            case "default" -> recHistoryRepository.findDistinctTop10ByUserOrderByUpdatedAtDesc(user);
             case "situation" -> recHistoryRepository.findByUserAndRecType(user, RecType.SITUATION);
             case "time" -> recHistoryRepository.findByUserAndRecType(user, RecType.TIME);
             case "popfri" -> recHistoryRepository.findByUserAndRecType(user, RecType.POPFRI);
@@ -81,6 +81,10 @@ public class HistoryService {
                     .visitCnt(1)
                     .build());
         }
+    }
+
+    public List<VisitHistory> getVisitHistory(User user){
+        return visitHistoryRepository.findByUserOrderByUpdatedAtDesc(user);
     }
 
     @Transactional
