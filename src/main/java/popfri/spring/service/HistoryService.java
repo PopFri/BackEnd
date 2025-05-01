@@ -2,6 +2,7 @@ package popfri.spring.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import popfri.spring.apiPayload.code.status.ErrorStatus;
 import popfri.spring.apiPayload.exception.handler.HistoryHandler;
 import popfri.spring.domain.RecHistory;
@@ -84,5 +85,13 @@ public class HistoryService {
 
     public List<VisitHistory> getVisitHistory(User user){
         return visitHistoryRepository.findByUserOrderByUpdatedAtDesc(user);
+    }
+
+    @Transactional
+    public Boolean delHistory(User user){
+        recHistoryRepository.deleteByUser(user);
+        visitHistoryRepository.deleteByUser(user);
+
+        return true;
     }
 }

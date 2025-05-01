@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface VisitHistoryRepository extends JpaRepository<VisitHistory, Long> {
     Optional<VisitHistory> findByUserAndTmdbId(User user, Integer tmdbId);
     List<VisitHistory> findByUserOrderByUpdatedAtDesc(User user);
+    void deleteByUser(User user);
 }
