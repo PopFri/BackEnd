@@ -187,4 +187,20 @@ public class MovieResponse {
         @JsonProperty("popularity")
         private Double popularity;
     }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Schema(title = "MOVIE_RES_02 : 영화한줄평 추천 리스트 응답")
+    public static class RecReviewMovieResDTO {
+        Long movieId;
+        String movieName;
+        String posterUrl;
+        Long reviewId;
+        String reviewContents;
+        Integer likeCnt;
+        String userName;
+        String profileUrl;
+    }
 }

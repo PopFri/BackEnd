@@ -13,13 +13,14 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import popfri.spring.apiPayload.code.status.ErrorStatus;
 import popfri.spring.apiPayload.exception.handler.MovieHandler;
+import popfri.spring.domain.Review;
+import popfri.spring.repository.ReviewRepository;
 import popfri.spring.web.dto.GPTRequest;
 import popfri.spring.web.dto.GPTResponse;
 import popfri.spring.web.dto.MovieResponse;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -29,6 +30,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class MovieService {
+    private final ReviewRepository reviewRepository;
     private final OkHttpClient client = new OkHttpClient();
 
     @Value("${tmdb.api.key}")
@@ -424,5 +426,26 @@ public class MovieService {
                             .build());
         }
         return rankingList;
+    }
+
+    public List<MovieResponse.RecReviewMovieResDTO> recReviewMovie(){
+        LocalDateTime oneMonthAgo = LocalDateTime.now().minusMonths(1);
+
+        return reviewRepository.findTop10ByCreatedAtAfter(oneMonthAgo).stream()
+                .sorted(Comparator.comparingInt(
+                        (Review review) -> review.getLikeCount() * 2 - review.getDislikeCount()
+                ).reversed())
+                .map(review -> MovieResponse.RecReviewMovieResDTO.builder()
+                        .movieId(review.getMovieId())
+                        .movieName(review.getMovieName())
+                        .posterUrl(review.getPosterUrl())
+                        .reviewId(review.getReviewId())
+                        .reviewContents(review.getReviewContent())
+                        .likeCnt(review.getLikeCount())
+                        .userName(review.getUser().getUserName())
+                        .profileUrl(review.getUser().getImageUrl())
+                        .build())
+                .limit(10)
+                .toList();
     }
 }
