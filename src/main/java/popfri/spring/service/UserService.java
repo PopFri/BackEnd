@@ -2,6 +2,7 @@ package popfri.spring.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import popfri.spring.apiPayload.code.status.ErrorStatus;
 import popfri.spring.apiPayload.exception.handler.UserHandler;
 import popfri.spring.domain.User;
@@ -19,5 +20,12 @@ public class UserService {
         }
 
         return user;
+    }
+
+    @Transactional
+    public Boolean resignUser (User user){
+        userRepository.delete(user);
+
+        return true;
     }
 }
