@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -43,6 +44,12 @@ public class Review {
     @Builder.Default
     @Column(name="dislike_count")
     private Integer dislikeCount = 0;
+
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL)
+    private List<LikeReview> likeReviewList;
+
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL)
+    private List<DislikeReview> dislikeReviewList;
 
     public void addLike() {
         if (this.likeCount == null) this.likeCount = 0;

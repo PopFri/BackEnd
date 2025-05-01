@@ -39,6 +39,15 @@ public class UserController {
         return ApiResponse.onSuccess(UserConverter.getUserDto(user));
     }
 
+    @DeleteMapping("")
+    @Operation(summary = "유저 탈퇴", description = "쿠키 내부 토큰을 확인해 해당 유저 삭제")
+    public ApiResponse<Boolean> resignUser(HttpServletRequest http){
+        String token = CookieUtil.getCookieValue(http, "Authorization");
+        User user = userService.getUser(jwtUtil.getProvideId(token));
+
+        return ApiResponse.onSuccess(userService.resignUser(user));
+    }
+
     // 유저 리뷰 조회
     @GetMapping("/review")
     @Operation(summary = "유저 리뷰 조회", description = "해당 유저의 리뷰들을 조회.")
