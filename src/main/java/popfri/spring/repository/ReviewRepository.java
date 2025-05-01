@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import popfri.spring.domain.Review;
 import popfri.spring.domain.User;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ReviewRepository extends JpaRepository<Review, Long> {
@@ -22,4 +23,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     boolean existsByUserAndMovieId(User user, Long movieId);
 
     List<Review> findByUser(User user);
+
+    //특정 시간 이후의 좋아요순 정렬 된 리뷰 리스트 중 상위 10개
+    List<Review> findTop10ByCreatedAtAfter(LocalDateTime localDateTime);
 }
