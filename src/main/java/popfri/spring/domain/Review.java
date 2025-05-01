@@ -45,12 +45,6 @@ public class Review {
     @Column(name="dislike_count")
     private Integer dislikeCount = 0;
 
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL)
-    private List<LikeReview> likeReviewList;
-
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL)
-    private List<DislikeReview> dislikeReviewList;
-
     public void addLike() {
         if (this.likeCount == null) this.likeCount = 0;
         this.likeCount++;
