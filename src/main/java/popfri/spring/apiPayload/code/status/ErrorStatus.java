@@ -18,6 +18,8 @@ public enum ErrorStatus implements BaseErrorCode {
 
     //User 관련 에러
     _USER_NOT_EXIST(HttpStatus.INTERNAL_SERVER_ERROR, "USER5001", "존재하지 않는 유저입니다."),
+    _GENDER_INVALID(HttpStatus.BAD_REQUEST, "USER4001", "올바르지 않은 성별 값입니다."),
+    _USER_DATA_EXIST(HttpStatus.BAD_REQUEST, "USER4002", "이미 존재하는 데이터입니다."),
 
     //Movie 관련 에러
     _MOVIE_NOT_EXIST(HttpStatus.INTERNAL_SERVER_ERROR, "MOVIE5001", "존재하지 않는 영화입니다."),

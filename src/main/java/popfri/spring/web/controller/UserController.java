@@ -14,10 +14,7 @@ import popfri.spring.jwt.JWTUtil;
 import popfri.spring.service.HistoryService;
 import popfri.spring.service.ReviewService;
 import popfri.spring.service.UserService;
-import popfri.spring.web.dto.HistoryRequest;
-import popfri.spring.web.dto.ReviewResponse;
-import popfri.spring.web.dto.HistoryResponse;
-import popfri.spring.web.dto.UserResponse;
+import popfri.spring.web.dto.*;
 
 import java.util.List;
 
@@ -46,6 +43,15 @@ public class UserController {
         User user = userService.getUser(jwtUtil.getProvideId(token));
 
         return ApiResponse.onSuccess(userService.resignUser(user));
+    }
+
+    @PatchMapping("")
+    @Operation(summary = "유저 성별, 나이 입력", description = "쿠키 내부 토큰과 성별, 생일을 입력받아 해당 유저 컬럼 수정")
+    public ApiResponse<Boolean> setUserGenderAndBirth(HttpServletRequest http, @RequestBody UserRequest.AddGenderAndBirthDto request){
+        String token = CookieUtil.getCookieValue(http, "Authorization");
+        User user = userService.getUser(jwtUtil.getProvideId(token));
+
+        return ApiResponse.onSuccess(userService.setGenderAndBirth(user, request));
     }
 
     // 유저 리뷰 조회

@@ -2,7 +2,9 @@ package popfri.spring.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import popfri.spring.domain.enums.Gender;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Entity
@@ -31,6 +33,12 @@ public class User {
 
     @Column(name = "login_type", length = 10)
     private String loginType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender", columnDefinition = "VARCHAR(10)")
+    private Gender gender;
+
+    private LocalDate birth;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<RecHistory> userFolderList;
