@@ -92,4 +92,10 @@ public class MovieController {
     public ApiResponse<List<MovieResponse.MovieRankingDTO>> loadBoxOfficeMovieRanking(@Parameter String date){
         return ApiResponse.onSuccess(movieDetailService.getBoxofficeRanking(date));
     }
+
+    @GetMapping("/recom/discovery")
+    @Operation(summary = "탐색할 영화 리스트 반환", description = "랜덤한 날짜의 박스오피스 순위를 반환")
+    public ApiResponse<MovieResponse.MovieDiscoveryDTO> loadDiscoveryMovieList(){
+        return ApiResponse.onSuccess(movieDetailService.getDiscoveryMovieList());
+    }
 }
