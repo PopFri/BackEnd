@@ -27,6 +27,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -459,6 +460,30 @@ public class MovieService {
         return MovieResponse.MovieDiscoveryDTO.builder()
                 .date(date.substring(0, 4) + "." + date.substring(4, 6) + "." + date.substring(6, 8) + " Box Office Rank")
                 .movies(movieList)
+                .build();
+    }
+
+    //영화 탐색 결과 반환
+    public MovieResponse.MovieDiscoveryResultDTO getMovieDiscoveryResult(List<MovieResponse.DiscoveryMovie> choosedMovie) {
+        List<MovieResponse.RecMovieResDTO> recommendMovie = new ArrayList<>();
+        int maxRecommendSize = 10;
+        int recommendSize = maxRecommendSize / choosedMovie.size();
+        for(MovieResponse.DiscoveryMovie movie: choosedMovie) {
+            List<MovieResponse.RecMovieResDTO> allRecommended = recommendMovieFromTMDB(Integer.parseInt(movie.getId()));
+            List<MovieResponse.RecMovieResDTO> randomRecommended = new Random()
+                    .ints(0, allRecommended.size())
+                    .distinct()
+                    .limit(recommendSize)
+                    .mapToObj(allRecommended::get)
+                    .toList();
+            for(MovieResponse.RecMovieResDTO recommendedMovie: randomRecommended) {
+                recommendMovie.add(recommendedMovie);
+            }
+        }
+
+        return MovieResponse.MovieDiscoveryResultDTO.builder()
+                .choosed(choosedMovie)
+                .recommend(recommendMovie)
                 .build();
     }
 

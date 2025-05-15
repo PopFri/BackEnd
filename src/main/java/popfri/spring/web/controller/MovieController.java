@@ -98,4 +98,10 @@ public class MovieController {
     public ApiResponse<MovieResponse.MovieDiscoveryDTO> loadDiscoveryMovieList(){
         return ApiResponse.onSuccess(movieDetailService.getDiscoveryMovieList());
     }
+
+    @PostMapping("/recom/user/discovery")
+    @Operation(summary = "탐색할 영화 결과 리스트 반환", description = "탐색한 영화와 그에 따른 추천 영화 반환")
+    public ApiResponse<MovieResponse.MovieDiscoveryResultDTO> loadDiscoveryMovieResult(@RequestBody List<MovieResponse.DiscoveryMovie> choosedMovies){
+        return ApiResponse.onSuccess(movieDetailService.getMovieDiscoveryResult(choosedMovies));
+    }
 }
