@@ -203,4 +203,15 @@ public class MovieResponse {
         String userName;
         String profileUrl;
     }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    @Setter
+    public static class MovieDiscoveryDTO {
+        private String date;
+        private List<MovieDetailDTO> movies;
+    }
 }

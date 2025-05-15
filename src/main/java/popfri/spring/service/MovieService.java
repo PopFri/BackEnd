@@ -20,11 +20,14 @@ import popfri.spring.web.dto.GPTResponse;
 import popfri.spring.web.dto.MovieResponse;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
@@ -426,6 +429,37 @@ public class MovieService {
                             .build());
         }
         return rankingList;
+    }
+
+    // 탐색된 영화 리스트 반환
+    public MovieResponse.MovieDiscoveryDTO getDiscoveryMovieList() {
+        List<MovieResponse.MovieDetailDTO> movieList = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+        LocalDate startDate = LocalDate.parse("20031201", formatter);
+        LocalDate endDate = LocalDate.now();
+
+        long startEpochDay = startDate.toEpochDay();
+        long endEpochDay = endDate.toEpochDay();
+
+        long randomDay = ThreadLocalRandom.current().nextLong(startEpochDay, endEpochDay + 1);
+        LocalDate randomDate = LocalDate.ofEpochDay(randomDay);
+
+        String date = randomDate.format(formatter);
+        List<MovieResponse.MovieRankingDTO> rankingList = getBoxofficeRanking(date);
+        for (MovieResponse.MovieRankingDTO ranking : rankingList) {
+            MovieResponse.TmdbDataByTitleDTO tmdbData = searchTmdbMovieByTitle(ranking.getTitle());
+            if (tmdbData == null) {
+                log.warn("검색 실패: {}", ranking.getTitle());
+                continue;
+            }
+            movieList.add(
+                    loadMovie(String.valueOf(tmdbData.getMovieId()))
+            );
+        }
+        return MovieResponse.MovieDiscoveryDTO.builder()
+                .date(date.substring(0, 4) + "." + date.substring(4, 6) + "." + date.substring(6, 8) + " Box Office Rank")
+                .movies(movieList)
+                .build();
     }
 
     public List<MovieResponse.RecReviewMovieResDTO> recReviewMovie(){
