@@ -13,7 +13,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import popfri.spring.apiPayload.code.status.ErrorStatus;
 import popfri.spring.apiPayload.exception.handler.MovieHandler;
+import popfri.spring.domain.RecHistory;
 import popfri.spring.domain.Review;
+import popfri.spring.domain.User;
+import popfri.spring.domain.enums.RecType;
+import popfri.spring.repository.RecHistoryRepository;
 import popfri.spring.repository.ReviewRepository;
 import popfri.spring.web.dto.GPTRequest;
 import popfri.spring.web.dto.GPTResponse;
@@ -24,10 +28,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -35,6 +36,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Slf4j
 public class MovieService {
     private final ReviewRepository reviewRepository;
+    private final RecHistoryRepository recHistoryRepository;
     private final OkHttpClient client = new OkHttpClient();
 
     @Value("${tmdb.api.key}")

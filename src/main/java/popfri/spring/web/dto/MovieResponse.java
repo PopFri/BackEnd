@@ -237,4 +237,16 @@ public class MovieResponse {
         String name;
         String imageUrl;
     }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    @Setter
+    public static class RecHistoryDTO {
+        private Integer movieId;
+        private String movieName;
+        private String posterUrl;
+    }
 }

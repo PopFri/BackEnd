@@ -30,7 +30,7 @@ public enum ErrorStatus implements BaseErrorCode {
     _REVIEW_NOT_YOUR(HttpStatus.BAD_REQUEST, "REVIEW5003", "작성자가 아닙니다."),
 
     //History 관련 에러
-    _OPTION_NOT_EXIST(HttpStatus.BAD_REQUEST, "HISTORY4001", "잘못된 옵션값입니다. (option: default, situation, time, popfri)"),
+    _OPTION_NOT_EXIST(HttpStatus.BAD_REQUEST, "HISTORY4001", "잘못된 옵션값입니다. (option: default, situation, time, popfri, discovery)"),
 
     //TMDB 관련 에러
     _TMDB_CONNECT_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, "TMDB5001", "TMDB 응답 요청 중 에러가 발생했습니다"),

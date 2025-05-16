@@ -101,7 +101,11 @@ public class MovieController {
 
     @PostMapping("/recom/user/discovery")
     @Operation(summary = "탐색할 영화 결과 리스트 반환", description = "탐색한 영화와 그에 따른 추천 영화 반환")
-    public ApiResponse<MovieResponse.MovieDiscoveryResultDTO> loadDiscoveryMovieResult(@RequestBody List<MovieResponse.DiscoveryMovie> choosedMovies){
-        return ApiResponse.onSuccess(movieDetailService.getMovieDiscoveryResult(choosedMovies));
+    public ApiResponse<MovieResponse.MovieDiscoveryResultDTO> loadDiscoveryMovieResult(@RequestBody List<MovieResponse.DiscoveryMovie> choosedMovies, HttpServletRequest http){
+        String token = CookieUtil.getCookieValue(http, "Authorization");
+        User user = userService.getUser(jwtUtil.getProvideId(token));
+        MovieResponse.MovieDiscoveryResultDTO response = movieDetailService.getMovieDiscoveryResult(choosedMovies);
+        historyService.saveMovieDiscoveryHistory(response, user);
+        return ApiResponse.onSuccess(response);
     }
 }

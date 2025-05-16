@@ -60,6 +60,7 @@ public class HistoryService {
             case "situation" -> recHistoryRepository.findByUserAndRecType(user, RecType.SITUATION);
             case "time" -> recHistoryRepository.findByUserAndRecType(user, RecType.TIME);
             case "popfri" -> recHistoryRepository.findByUserAndRecType(user, RecType.POPFRI);
+            case "discovery" -> recHistoryRepository.findByUserAndRecType(user, RecType.DISCOVERY);
             default -> throw new HistoryHandler(ErrorStatus._OPTION_NOT_EXIST);
         };
     }
@@ -93,5 +94,59 @@ public class HistoryService {
         visitHistoryRepository.deleteByUser(user);
 
         return true;
+    }
+
+    //영화 탐색 결과 저장
+    public void saveMovieDiscoveryHistory(MovieResponse.MovieDiscoveryResultDTO movieDiscoveryResultDTO, User user) {
+        for(MovieResponse.DiscoveryMovie choosed : movieDiscoveryResultDTO.getChoosed()) {
+            Optional<RecHistory> recHistoryOpt =
+                    recHistoryRepository.findByRecTypeAndTmdbIdAndUser(
+                            RecType.DISCOVERY,
+                            Integer.parseInt(choosed.getId()),
+                            user
+                    );
+
+            if(recHistoryOpt.isPresent()){
+                RecHistory rec = recHistoryOpt.get();
+                rec.setRecCnt(rec.getRecCnt() + 1);
+                recHistoryRepository.save(rec);
+            }else {
+                recHistoryRepository.save(
+                        RecHistory.builder()
+                                .tmdbId(Integer.parseInt(choosed.getId()))
+                                .movieName(choosed.getName())
+                                .posterUrl(choosed.getImageUrl())
+                                .recType(RecType.DISCOVERY)
+                                .recCnt(1)
+                                .user(user)
+                                .build()
+                );
+            }
+        }
+
+        for(MovieResponse.RecMovieResDTO recommend : movieDiscoveryResultDTO.getRecommend()) {
+            Optional<RecHistory> recHistoryOpt =
+                    recHistoryRepository.findByRecTypeAndTmdbIdAndUser(
+                            RecType.DISCOVERY,
+                            recommend.getMovieId(),
+                            user
+                    );
+            if(recHistoryOpt.isPresent()){
+                RecHistory rec = recHistoryOpt.get();
+                rec.setRecCnt(rec.getRecCnt() + 1);
+                recHistoryRepository.save(rec);
+            }else {
+                recHistoryRepository.save(
+                        RecHistory.builder()
+                                .tmdbId(recommend.getMovieId())
+                                .movieName(recommend.getMovieName())
+                                .posterUrl(recommend.getImageUrl())
+                                .recType(RecType.DISCOVERY)
+                                .recCnt(1)
+                                .user(user)
+                                .build()
+                );
+            }
+        }
     }
 }
