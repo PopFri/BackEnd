@@ -465,7 +465,7 @@ public class MovieService {
     //영화 탐색 결과 반환
     public MovieResponse.MovieDiscoveryResultDTO getMovieDiscoveryResult(List<MovieResponse.DiscoveryMovie> choosedMovie) {
         List<MovieResponse.RecMovieResDTO> recommendMovie = new ArrayList<>();
-        int maxRecommendSize = 10;
+        int maxRecommendSize = 15;
         int recommendSize = maxRecommendSize / choosedMovie.size();
         for(MovieResponse.DiscoveryMovie movie: choosedMovie) {
             List<MovieResponse.RecMovieResDTO> allRecommended = recommendMovieFromTMDB(Integer.parseInt(movie.getId()));
