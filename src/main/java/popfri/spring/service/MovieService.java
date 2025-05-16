@@ -14,6 +14,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import popfri.spring.apiPayload.code.status.ErrorStatus;
 import popfri.spring.apiPayload.exception.handler.MovieHandler;
 import popfri.spring.domain.Review;
+import popfri.spring.repository.RecHistoryRepository;
 import popfri.spring.repository.ReviewRepository;
 import popfri.spring.web.dto.GPTRequest;
 import popfri.spring.web.dto.GPTResponse;
@@ -24,9 +25,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Service
@@ -34,6 +33,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Slf4j
 public class MovieService {
     private final ReviewRepository reviewRepository;
+    private final RecHistoryRepository recHistoryRepository;
     private final OkHttpClient client = new OkHttpClient();
 
     @Value("${tmdb.api.key}")
@@ -459,6 +459,30 @@ public class MovieService {
         return MovieResponse.MovieDiscoveryDTO.builder()
                 .date(date.substring(0, 4) + "." + date.substring(4, 6) + "." + date.substring(6, 8) + " Box Office Rank")
                 .movies(movieList)
+                .build();
+    }
+
+    //영화 탐색 결과 반환
+    public MovieResponse.MovieDiscoveryResultDTO getMovieDiscoveryResult(List<MovieResponse.DiscoveryMovie> choosedMovie) {
+        List<MovieResponse.RecMovieResDTO> recommendMovie = new ArrayList<>();
+        int maxRecommendSize = 15;
+        int recommendSize = maxRecommendSize / choosedMovie.size();
+        for(MovieResponse.DiscoveryMovie movie: choosedMovie) {
+            List<MovieResponse.RecMovieResDTO> allRecommended = recommendMovieFromTMDB(Integer.parseInt(movie.getId()));
+            List<MovieResponse.RecMovieResDTO> randomRecommended = new Random()
+                    .ints(0, allRecommended.size())
+                    .distinct()
+                    .limit(recommendSize)
+                    .mapToObj(allRecommended::get)
+                    .toList();
+            for(MovieResponse.RecMovieResDTO recommendedMovie: randomRecommended) {
+                recommendMovie.add(recommendedMovie);
+            }
+        }
+
+        return MovieResponse.MovieDiscoveryResultDTO.builder()
+                .choosed(choosedMovie)
+                .recommend(recommendMovie)
                 .build();
     }
 

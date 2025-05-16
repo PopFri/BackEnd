@@ -214,4 +214,39 @@ public class MovieResponse {
         private String date;
         private List<MovieDetailDTO> movies;
     }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    @Setter
+    public static class MovieDiscoveryResultDTO {
+        private List<DiscoveryMovie> choosed;
+        private List<RecMovieResDTO> recommend;
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    @Setter
+    public static class DiscoveryMovie {
+        String id;
+        String name;
+        String imageUrl;
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    @Setter
+    public static class RecHistoryDTO {
+        private Integer movieId;
+        private String movieName;
+        private String posterUrl;
+    }
 }
