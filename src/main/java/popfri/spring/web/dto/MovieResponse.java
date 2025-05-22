@@ -18,6 +18,7 @@ public class MovieResponse {
     @Getter
     @Setter
     public static class MovieDetailDTO {
+        private String movieId;
         private String backgroundImageUrl;
         private String imageUrl;
         private String title;
@@ -112,7 +113,7 @@ public class MovieResponse {
         private Long movieId;
         private String backgroundImageUrl;
         private String imageUrl;
-        private String title;
+        private String movieName;
         private String overView;
     }
 

@@ -29,7 +29,7 @@ public class ReviewController {
     // 리뷰 작성
     @PostMapping("/review")
     @Operation(summary = "리뷰 작성", description = "작성된 리뷰 정보 저장.")
-    public ApiResponse<ReviewResponse.ReviewResponseDTO> createReview(ReviewResponse.ReviewRequestDTO reviewRequest, HttpServletRequest http) {
+    public ApiResponse<ReviewResponse.ReviewResponseDTO> createReview(@RequestBody ReviewResponse.ReviewRequestDTO reviewRequest, HttpServletRequest http) {
         String token = CookieUtil.getCookieValue(http, "Authorization");
         User user = userService.getUser(jwtUtil.getProvideId(token));
         return ApiResponse.onSuccess(reviewService.createReview(reviewRequest, user));
@@ -38,7 +38,7 @@ public class ReviewController {
     // 리뷰 좋아요
     @PostMapping("/review/like")
     @Operation(summary = "리뷰 좋아요", description = "해당 리뷰에 좋아요 표시.")
-    public ApiResponse<Boolean> likeReview(ReviewResponse.ReviewLikeDTO reviewLikeRequest, HttpServletRequest http) {
+    public ApiResponse<Boolean> likeReview(@RequestBody ReviewResponse.ReviewLikeDTO reviewLikeRequest, HttpServletRequest http) {
         String token = CookieUtil.getCookieValue(http, "Authorization");
         User user = userService.getUser(jwtUtil.getProvideId(token));
         reviewService.handleReviewReaction(reviewLikeRequest, ReviewActionType.LIKE, user);
@@ -48,7 +48,7 @@ public class ReviewController {
     // 리뷰 싫어요
     @PostMapping("/review/dislike")
     @Operation(summary = "리뷰 싫어요", description = "해당 리뷰에 싫어요 표시.")
-    public ApiResponse<Boolean> dislikeReview(ReviewResponse.ReviewLikeDTO reviewDislikeRequest, HttpServletRequest http) {
+    public ApiResponse<Boolean> dislikeReview(@RequestBody ReviewResponse.ReviewLikeDTO reviewDislikeRequest, HttpServletRequest http) {
         String token = CookieUtil.getCookieValue(http, "Authorization");
         User user = userService.getUser(jwtUtil.getProvideId(token));
         reviewService.handleReviewReaction(reviewDislikeRequest, ReviewActionType.DISLIKE, user);
@@ -56,19 +56,23 @@ public class ReviewController {
     }
 
     // 리뷰 최신순 조회
-    @GetMapping("/review/{movieId}/recent")
+    @GetMapping("/review/{movieId}/recent/{page}")
     @Operation(summary = "리뷰 최신순 조회", description = "해당 영화의 리뷰들을 최신순으로 조회.")
-    public ApiResponse<List<ReviewResponse.ReviewResponseDTO>> getReviews(@Parameter String movieId) {
+    public ApiResponse<ReviewResponse.ReviewListDTO> getReviews(@PathVariable("movieId") String movieId, @PathVariable("page") int page, HttpServletRequest http) {
         Long movieIdLong = Long.parseLong(movieId);
-        return ApiResponse.onSuccess(reviewService.getReviewsByMovieId(movieIdLong));
+        String token = CookieUtil.getCookieValue(http, "Authorization");
+        User user = userService.getUser(jwtUtil.getProvideId(token));
+        return ApiResponse.onSuccess(reviewService.getReviewsByMovieId(movieIdLong, page, user));
     }
 
     // 리뷰 좋아요 순 조회
-    @GetMapping("/review/{movieId}/like")
+    @GetMapping("/review/{movieId}/like/{page}")
     @Operation(summary = "리뷰 좋아요 순 조회", description = "해당 영화의 리뷰들을 좋아요와 싫어요의 계산식으로 정렬하여 조회.")
-    public ApiResponse<List<ReviewResponse.ReviewResponseDTO>> getReviewsOrderByLike(@Parameter String movieId) {
+    public ApiResponse<ReviewResponse.ReviewListDTO> getReviewsOrderByLike(@PathVariable("movieId") String movieId, @PathVariable("page") int page, HttpServletRequest http) {
         Long movieIdLong = Long.parseLong(movieId);
-        return ApiResponse.onSuccess(reviewService.getReviewByMovieIdOrderByLike(movieIdLong));
+        String token = CookieUtil.getCookieValue(http, "Authorization");
+        User user = userService.getUser(jwtUtil.getProvideId(token));
+        return ApiResponse.onSuccess(reviewService.getReviewByMovieIdOrderByLike(movieIdLong, page, user));
     }
 
     // 리뷰 삭제
