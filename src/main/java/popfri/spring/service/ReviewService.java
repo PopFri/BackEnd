@@ -98,8 +98,8 @@ public class ReviewService {
 
         return ReviewResponse.ReviewListDTO.builder()
                 .hasNext(reviewPage.hasNext())
-                .totlaReview(reviewPage.getTotalElements())
-                .totlaPage(reviewPage.getTotalPages())
+                .totalReview(reviewPage.getTotalElements())
+                .totalPage(reviewPage.getTotalPages())
                 .reviews(reviewDtoList)
                 .build();
     }
@@ -136,8 +136,8 @@ public class ReviewService {
 
         return ReviewResponse.ReviewListDTO.builder()
                 .hasNext(reviewPage.hasNext())
-                .totlaReview(reviewPage.getTotalElements())
-                .totlaPage(reviewPage.getTotalPages())
+                .totalReview(reviewPage.getTotalElements())
+                .totalPage(reviewPage.getTotalPages())
                 .reviews(reviewDtoList)
                 .build();
     }

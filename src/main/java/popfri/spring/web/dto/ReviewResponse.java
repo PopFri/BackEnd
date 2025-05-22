@@ -17,8 +17,8 @@ public class ReviewResponse {
     @Setter
     public static class ReviewListDTO {
         private boolean hasNext;
-        private Long totlaReview;
-        private int totlaPage;
+        private Long totalReview;
+        private int totalPage;
         private List<ReviewResponseDTO> reviews;
     }
 
