@@ -81,6 +81,7 @@ public class ReviewResponse {
         private LocalDateTime createdAt;
         private String movieName;
         private String posterUrl;
+        private Integer likeCount;
     }
 
     @Builder

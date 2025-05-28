@@ -221,6 +221,7 @@ public class ReviewService {
                         .posterUrl(review.getPosterUrl())
                         .createdAt(review.getCreatedAt())
                         .reviewContent(review.getReviewContent())
+                        .likeCount(review.getLikeCount())
                         .build())
                 .collect(Collectors.toList());
     }
