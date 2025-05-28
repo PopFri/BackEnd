@@ -78,7 +78,7 @@ public class ReviewController {
     // 리뷰 삭제
     @DeleteMapping("/review/{reviewId}")
     @Operation(summary = "리뷰 삭제", description = "해당 리뷰 삭제")
-    public ApiResponse<Boolean> deleteReview(@Parameter String reviewId, HttpServletRequest http) {
+    public ApiResponse<Boolean> deleteReview(@PathVariable String reviewId, HttpServletRequest http) {
         Long reviewIdLong = Long.parseLong(reviewId);
         String token = CookieUtil.getCookieValue(http, "Authorization");
         User user = userService.getUser(jwtUtil.getProvideId(token));
