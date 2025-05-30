@@ -1,6 +1,7 @@
 package popfri.spring.apiPayload.exception;
 
 import popfri.spring.apiPayload.ApiResponse;
+import popfri.spring.apiPayload.code.BaseErrorCode;
 import popfri.spring.apiPayload.code.ErrorReasonDTO;
 import popfri.spring.apiPayload.code.status.ErrorStatus;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import popfri.spring.apiPayload.exception.handler.ReviewHandler;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,6 +27,12 @@ import java.util.Optional;
 @RestControllerAdvice(annotations = {RestController.class})
 public class ExceptionAdvice extends ResponseEntityExceptionHandler {
 
+    @ExceptionHandler(ReviewHandler.class)
+    public ResponseEntity<ApiResponse<?>> handleReviewException(ReviewHandler ex) {
+        ErrorReasonDTO reason = ex.getErrorCode().getReasonHttpStatus(); // 혹은 getReason()
+        return ResponseEntity.status(reason.getHttpStatus())
+                .body(ApiResponse.onFailure(reason.getCode(), reason.getMessage(), null));
+    }
 
     @ExceptionHandler
     public ResponseEntity<Object> validation(ConstraintViolationException e, WebRequest request) {

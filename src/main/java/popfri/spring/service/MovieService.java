@@ -133,6 +133,7 @@ public class MovieService {
         MovieResponse.MovieDetailDTO result = new MovieResponse.MovieDetailDTO();
 
         try {
+            result.setMovieId(movieId);
             // 메인 정보
             String movieDetail = loadMovieDetail(movieId);
             JsonNode detailNode = objectMapper.readTree(movieDetail);
@@ -411,7 +412,7 @@ public class MovieService {
             if(tmdbData == null) {
                 rankingList.add(MovieResponse.MovieRankingDTO.builder()
                         .rank(movieData.getRank())
-                        .title(movieData.getTitle())
+                        .movieName(movieData.getTitle())
                         .backgroundImageUrl(null)
                         .movieId(0L)
                         .overView("정보가 없습니다.")
@@ -421,7 +422,7 @@ public class MovieService {
             }
             rankingList.add(MovieResponse.MovieRankingDTO.builder()
                             .rank(movieData.getRank())
-                            .title(movieData.getTitle())
+                            .movieName(movieData.getTitle())
                             .backgroundImageUrl(tmdbData.getBackgroundImageUrl())
                             .movieId(tmdbData.getMovieId())
                             .overView(tmdbData.getOverView())
@@ -447,9 +448,9 @@ public class MovieService {
         String date = randomDate.format(formatter);
         List<MovieResponse.MovieRankingDTO> rankingList = getBoxofficeRanking(date);
         for (MovieResponse.MovieRankingDTO ranking : rankingList) {
-            MovieResponse.TmdbDataByTitleDTO tmdbData = searchTmdbMovieByTitle(ranking.getTitle());
+            MovieResponse.TmdbDataByTitleDTO tmdbData = searchTmdbMovieByTitle(ranking.getMovieName());
             if (tmdbData == null) {
-                log.warn("검색 실패: {}", ranking.getTitle());
+                log.warn("검색 실패: {}", ranking.getMovieName());
                 continue;
             }
             movieList.add(

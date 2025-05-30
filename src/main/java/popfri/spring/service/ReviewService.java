@@ -1,5 +1,8 @@
 package popfri.spring.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import popfri.spring.apiPayload.code.status.ErrorStatus;
@@ -17,7 +20,9 @@ import popfri.spring.repository.UserRepository;
 import popfri.spring.web.dto.ReviewResponse;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -62,31 +67,79 @@ public class ReviewService {
     }
 
     // 영화 별 리뷰 조회 최신순
-    public List<ReviewResponse.ReviewResponseDTO> getReviewsByMovieId(Long movieId) {
-        List<Review> reviews = reviewRepository.findByMovieIdOrderByCreatedAtDesc(movieId);
-        return reviews.stream()
+    public ReviewResponse.ReviewListDTO getReviewsByMovieId(Long movieId, int page, User user) {
+        Pageable pageable = PageRequest.of(page - 1, 20);
+        Page<ReviewResponse.ReviewProjectionDTO> reviewPage = reviewRepository.findReviewWithUserInfoOrderByCreatedAt(movieId, pageable);
+
+        List<Long> reviewIds = reviewPage.getContent().stream()
+                .map(ReviewResponse.ReviewProjectionDTO::getReviewId)
+                .toList();
+
+        Map<Long, String> statusMap = new HashMap<>();
+        likeReviewRepository.findAllByUserAndReview_ReviewIdIn(user, reviewIds)
+                .forEach(lr -> statusMap.put(lr.getReview().getReviewId(), "like"));
+        dislikeReviewRepository.findAllByUserAndReview_ReviewIdIn(user, reviewIds)
+                .forEach(dr -> statusMap.put(dr.getReview().getReviewId(), "dislike"));
+
+        List<ReviewResponse.ReviewResponseDTO> reviewDtoList = reviewPage.getContent().stream()
                 .map(review -> ReviewResponse.ReviewResponseDTO.builder()
                         .reviewId(review.getReviewId())
-                        .userId(review.getUser().getUserId())
                         .movieId(review.getMovieId())
+                        .userId(review.getUserId())
+                        .userName(review.getUserName())
+                        .userEmail(review.getUserEmail())
+                        .userImageUrl(review.getUserProfileImage())
                         .createdAt(review.getCreatedAt())
                         .reviewContent(review.getReviewContent())
-                        .build())
-                .collect(Collectors.toList());
+                        .likeCount(review.getLikeCount())
+                        .likeStatus(statusMap.get(review.getReviewId()))
+                        .build()
+                ).toList();
+
+        return ReviewResponse.ReviewListDTO.builder()
+                .hasNext(reviewPage.hasNext())
+                .totalReview(reviewPage.getTotalElements())
+                .totalPage(reviewPage.getTotalPages())
+                .reviews(reviewDtoList)
+                .build();
     }
 
     // 영화 별 리뷰 조회 좋아요순
-    public List<ReviewResponse.ReviewResponseDTO> getReviewByMovieIdOrderByLike(Long movieId) {
-        List<Review> reviews = reviewRepository.findReviewsByMovieIdOrderByScore(movieId);
-        return reviews.stream()
+    public ReviewResponse.ReviewListDTO getReviewByMovieIdOrderByLike(Long movieId, int page, User user) {
+        Pageable pageable = PageRequest.of(page - 1, 20);
+        Page<ReviewResponse.ReviewProjectionDTO> reviewPage = reviewRepository.findReviewWithUserInfoOrderByScore(movieId, pageable);
+
+        List<Long> reviewIds = reviewPage.getContent().stream()
+                .map(ReviewResponse.ReviewProjectionDTO::getReviewId)
+                .toList();
+
+        Map<Long, String> statusMap = new HashMap<>();
+        likeReviewRepository.findAllByUserAndReview_ReviewIdIn(user, reviewIds)
+                .forEach(lr -> statusMap.put(lr.getReview().getReviewId(), "like"));
+        dislikeReviewRepository.findAllByUserAndReview_ReviewIdIn(user, reviewIds)
+                .forEach(dr -> statusMap.put(dr.getReview().getReviewId(), "dislike"));
+
+        List<ReviewResponse.ReviewResponseDTO> reviewDtoList = reviewPage.getContent().stream()
                 .map(review -> ReviewResponse.ReviewResponseDTO.builder()
-                        .reviewId(review.getReviewId())
-                        .userId(review.getUser().getUserId())
-                        .movieId(review.getMovieId())
-                        .createdAt(review.getCreatedAt())
-                        .reviewContent(review.getReviewContent())
-                        .build())
-                .collect(Collectors.toList());
+                            .reviewId(review.getReviewId())
+                            .movieId(review.getMovieId())
+                            .userId(review.getUserId())
+                            .userName(review.getUserName())
+                            .userEmail(review.getUserEmail())
+                            .userImageUrl(review.getUserProfileImage())
+                            .createdAt(review.getCreatedAt())
+                            .reviewContent(review.getReviewContent())
+                            .likeCount(review.getLikeCount())
+                            .likeStatus(statusMap.get(review.getReviewId()))
+                            .build()
+                ).toList();
+
+        return ReviewResponse.ReviewListDTO.builder()
+                .hasNext(reviewPage.hasNext())
+                .totalReview(reviewPage.getTotalElements())
+                .totalPage(reviewPage.getTotalPages())
+                .reviews(reviewDtoList)
+                .build();
     }
 
     // 리뷰 좋아요/싫어요 처리
@@ -168,6 +221,7 @@ public class ReviewService {
                         .posterUrl(review.getPosterUrl())
                         .createdAt(review.getCreatedAt())
                         .reviewContent(review.getReviewContent())
+                        .likeCount(review.getLikeCount())
                         .build())
                 .collect(Collectors.toList());
     }
