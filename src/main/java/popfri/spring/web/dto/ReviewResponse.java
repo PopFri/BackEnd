@@ -103,6 +103,5 @@ public class ReviewResponse {
     @Setter
     public static class ReviewLikeDTO {
         private Long reviewId;
-        private Long userId;
     }
 }
