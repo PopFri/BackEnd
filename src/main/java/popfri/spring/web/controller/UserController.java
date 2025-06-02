@@ -32,7 +32,7 @@ public class UserController {
     private final HistoryService historyService;
 
     @DeleteMapping("/logout")
-    @Operation(summary = "유저 정보 조회", description = "쿠키 내부 토큰을 확인해 유저 정보 반환")
+    @Operation(summary = "로그 아웃", description = "쿠키 내부 토큰 중 Authorization 삭제")
     public ApiResponse<Boolean> logout(HttpServletRequest http, HttpServletResponse response){
         String token = CookieUtil.getCookieValue(http, "Authorization");
         User user = userService.getUser(jwtUtil.getProvideId(token));
