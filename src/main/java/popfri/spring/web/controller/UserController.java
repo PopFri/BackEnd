@@ -3,9 +3,12 @@ package popfri.spring.web.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import popfri.spring.apiPayload.ApiResponse;
+import popfri.spring.apiPayload.code.status.ErrorStatus;
+import popfri.spring.apiPayload.exception.handler.UserHandler;
 import popfri.spring.converter.HistoryConverter;
 import popfri.spring.converter.UserConverter;
 import popfri.spring.domain.User;
@@ -27,6 +30,20 @@ public class UserController {
     private final UserService userService;
     private final ReviewService reviewService;
     private final HistoryService historyService;
+
+    @DeleteMapping("/logout")
+    @Operation(summary = "유저 정보 조회", description = "쿠키 내부 토큰을 확인해 유저 정보 반환")
+    public ApiResponse<Boolean> logout(HttpServletRequest http, HttpServletResponse response){
+        String token = CookieUtil.getCookieValue(http, "Authorization");
+        User user = userService.getUser(jwtUtil.getProvideId(token));
+
+        if(user != null){
+            CookieUtil.deleteCookie(http, response, "Authorization");
+        } else {
+            throw new UserHandler(ErrorStatus._USER_NOT_EXIST);
+        }
+        return ApiResponse.onSuccess(true);
+    }
     @GetMapping("")
     @Operation(summary = "유저 정보 조회", description = "쿠키 내부 토큰을 확인해 유저 정보 반환")
     public ApiResponse<UserResponse.UserGetResDTO> getUser(HttpServletRequest http){
