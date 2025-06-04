@@ -44,6 +44,7 @@ public class UserController {
         }
         return ApiResponse.onSuccess(true);
     }
+
     @GetMapping("")
     @Operation(summary = "유저 정보 조회", description = "쿠키 내부 토큰을 확인해 유저 정보 반환")
     public ApiResponse<UserResponse.UserGetResDTO> getUser(HttpServletRequest http){
