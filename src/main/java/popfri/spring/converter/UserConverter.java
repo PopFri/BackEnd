@@ -11,6 +11,8 @@ public class UserConverter {
                 .name(user.getUserName())
                 .email(user.getUserEmail())
                 .imageUrl(user.getImageUrl())
+                .gender(user.getGender())
+                .birth(user.getBirth())
                 .build();
     }
 }
