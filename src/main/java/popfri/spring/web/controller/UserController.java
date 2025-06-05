@@ -54,6 +54,15 @@ public class UserController {
         return ApiResponse.onSuccess(UserConverter.getUserDto(user));
     }
 
+    @GetMapping("/provide")
+    @Operation(summary = "유저 provide_id 조회", description = "쿠키 내부 토큰을 확인해 유저 provide_id 반환")
+    public ApiResponse<String> getUserProvideId(HttpServletRequest http) {
+        String token = CookieUtil.getCookieValue(http, "Authorization");
+        String id = jwtUtil.getProvideId(token);
+
+        return ApiResponse.onSuccess(id);
+    }
+
     @DeleteMapping("")
     @Operation(summary = "유저 탈퇴", description = "쿠키 내부 토큰을 확인해 해당 유저 삭제")
     public ApiResponse<Boolean> resignUser(HttpServletRequest http){
