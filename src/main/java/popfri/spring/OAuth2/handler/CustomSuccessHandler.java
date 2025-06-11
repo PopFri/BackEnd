@@ -44,7 +44,7 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         response.addCookie(createCookie(token));
 
         //프론트 주소로 리다이렉트
-        response.sendRedirect(frontendUrl + "/home");
+        response.sendRedirect(frontendUrl + "/login");
     }
 
     private Cookie createCookie(String value) {

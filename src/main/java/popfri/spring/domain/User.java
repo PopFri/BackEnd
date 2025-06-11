@@ -41,10 +41,13 @@ public class User {
     private LocalDate birth;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<RecHistory> userFolderList;
+    private List<RecHistory> recHistoryList;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Review> review;
+    private List<VisitHistory> visitHistoryList;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Review> reviewList;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<LikeReview> likeReviewList;
