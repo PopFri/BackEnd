@@ -53,6 +53,7 @@ public class HistoryService {
                 .toList();
 
         recHistoryRepository.saveAll(result);
+        sseEmitters.sendDailyRecommendAnalysisToAllTypes();
     }
 
     //추천 기록 조회 서비스
@@ -84,7 +85,7 @@ public class HistoryService {
                     .visitCnt(1)
                     .build());
         }
-        sseEmitters.sendDailyVisitAnalysis("default");
+        sseEmitters.sendDailyVisitAnalysisToAllTypes();
     }
 
     public List<VisitHistory> getVisitHistory(User user){
@@ -151,5 +152,6 @@ public class HistoryService {
                 );
             }
         }
+        sseEmitters.sendDailyRecommendAnalysisToAllTypes();
     }
 }
