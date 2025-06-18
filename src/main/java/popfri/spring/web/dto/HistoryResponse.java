@@ -49,4 +49,15 @@ public class HistoryResponse {
 
         List<HistoryResDTO> historyList;
     }
+
+    @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Schema(title = "HISTORY_RES_04 : 유저 유형별 추천 조회 기록 응답")
+    public static class VisitAnalysisDTO{
+        Integer movieId;
+        String movieName;
+        Integer count;
+    }
 }
