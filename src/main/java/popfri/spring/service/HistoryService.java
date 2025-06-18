@@ -11,6 +11,7 @@ import popfri.spring.domain.VisitHistory;
 import popfri.spring.domain.enums.RecType;
 import popfri.spring.repository.RecHistoryRepository;
 import popfri.spring.repository.VisitHistoryRepository;
+import popfri.spring.sse.SseEmitters;
 import popfri.spring.web.dto.HistoryRequest;
 import popfri.spring.web.dto.MovieResponse;
 
@@ -23,6 +24,7 @@ import java.util.Optional;
 public class HistoryService {
     private final RecHistoryRepository recHistoryRepository;
     private final VisitHistoryRepository visitHistoryRepository;
+    private final SseEmitters sseEmitters;
 
     public void saveRecHistory(User user, List<MovieResponse.RecMovieResDTO> responseList, RecType recType){
         List<RecHistory> historyList = recHistoryRepository.findByUser(user);
@@ -82,6 +84,7 @@ public class HistoryService {
                     .visitCnt(1)
                     .build());
         }
+        sseEmitters.sendDailyVisitAnalysis("default");
     }
 
     public List<VisitHistory> getVisitHistory(User user){

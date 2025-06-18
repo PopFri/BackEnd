@@ -24,7 +24,11 @@ public class JWTFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-
+        // SSE 요청은 JWT 인증 없이 통과시킴
+        if (request.getRequestURI().startsWith("/sse/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         //cookie들을 불러온 뒤 Authorization Key에 담긴 쿠키를 찾음
         String authorization = null;
         Cookie[] cookies = request.getCookies();
