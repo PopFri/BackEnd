@@ -18,13 +18,13 @@ import java.util.List;
 public class SseController {
     private final SseEmitters sseEmitters;
 
-    @GetMapping("/visit/analysis")
+    @GetMapping("/analysis/visit")
     public ResponseEntity<List<HistoryResponse.VisitAnalysisDTO>> getVisitAnalysisToday(@RequestParam String date, @RequestParam String type) {
         List<HistoryResponse.VisitAnalysisDTO> result = sseEmitters.getVisitAnalysisData(date, type);
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/recommend/analysis")
+    @GetMapping("/analysis/recommend")
     public ResponseEntity<List<HistoryResponse.VisitAnalysisDTO>> getRecommendAnalysisToday(@RequestParam String date, @RequestParam String type) {
         List<HistoryResponse.VisitAnalysisDTO> result = sseEmitters.getRecommendAnalysisData(date, type);
         return ResponseEntity.ok(result);
