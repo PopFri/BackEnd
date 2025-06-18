@@ -25,7 +25,7 @@ public class JWTFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         // SSE 요청은 JWT 인증 없이 통과시킴
-        if (request.getRequestURI().startsWith("/sse/visit-analysis")) {
+        if (request.getRequestURI().startsWith("/sse/")) {
             filterChain.doFilter(request, response);
             return;
         }
