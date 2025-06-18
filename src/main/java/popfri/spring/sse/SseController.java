@@ -18,9 +18,15 @@ import java.util.List;
 public class SseController {
     private final SseEmitters sseEmitters;
 
-    @GetMapping("/analysis")
+    @GetMapping("/visit/analysis")
     public ResponseEntity<List<HistoryResponse.VisitAnalysisDTO>> getVisitAnalysisToday(@RequestParam String date, @RequestParam String type) {
-        List<HistoryResponse.VisitAnalysisDTO> result = sseEmitters.getVisitAnalysisDataDay(date, type);
+        List<HistoryResponse.VisitAnalysisDTO> result = sseEmitters.getVisitAnalysisData(date, type);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/recommend/analysis")
+    public ResponseEntity<List<HistoryResponse.VisitAnalysisDTO>> getRecommendAnalysisToday(@RequestParam String date, @RequestParam String type) {
+        List<HistoryResponse.VisitAnalysisDTO> result = sseEmitters.getRecommendAnalysisData(date, type);
         return ResponseEntity.ok(result);
     }
 
@@ -46,9 +52,30 @@ public class SseController {
         sseEmitters.add(emitter);
 
         try {
-            List<HistoryResponse.VisitAnalysisDTO> data = sseEmitters.getVisitAnalysisDataDay("day", type);
+            List<HistoryResponse.VisitAnalysisDTO> data = sseEmitters.getVisitAnalysisData("day", type);
             emitter.send(SseEmitter.event()
                     .name("visit-analysis")
+                    .data(data));
+        } catch (IOException e) {
+            emitter.completeWithError(e);
+            sseEmitters.remove(emitter);
+            return ResponseEntity.internalServerError().build();
+        }
+
+        return ResponseEntity.ok(emitter);
+    }
+
+    @GetMapping(value = "/recommend-analysis", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public ResponseEntity<SseEmitter> subscribeToRecommendAnalysis(
+            @RequestParam(defaultValue = "default") String type) {
+
+        SseEmitter emitter = new SseEmitter(60 * 1000L);
+        sseEmitters.add(emitter);
+
+        try {
+            List<HistoryResponse.VisitAnalysisDTO> data = sseEmitters.getRecommendAnalysisData("day", type);
+            emitter.send(SseEmitter.event()
+                    .name("recommend-analysis")
                     .data(data));
         } catch (IOException e) {
             emitter.completeWithError(e);

@@ -84,7 +84,7 @@ public class HistoryService {
                     .visitCnt(1)
                     .build());
         }
-        sseEmitters.sendDailyVisitAnalysis("default");
+        sseEmitters.sendDailyVisitAnalysisToAllTypes();
     }
 
     public List<VisitHistory> getVisitHistory(User user){
@@ -151,5 +151,6 @@ public class HistoryService {
                 );
             }
         }
+        sseEmitters.sendDailyRecommendAnalysisToAllTypes();
     }
 }
