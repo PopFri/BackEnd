@@ -225,7 +225,7 @@ public class SseEmitters {
             try {
                 sendDailyVisitAnalysis(type);
             } catch (Exception e) {
-                System.err.println("SSE 전송 실패 (type=" + type + "): " + e.getMessage());
+                throw new RuntimeException(e);
             }
         }
     }
@@ -252,7 +252,7 @@ public class SseEmitters {
             try {
                 sendDailyRecommendAnalysis(type);
             } catch (Exception e) {
-                System.err.println("SSE 전송 실패 (type=" + type + "): " + e.getMessage());
+                throw new RuntimeException(e);
             }
         }
     }
