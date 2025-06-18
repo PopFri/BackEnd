@@ -209,7 +209,7 @@ public class SseEmitters {
         for (SseEmitter emitter : emitters) {
             try {
                 emitter.send(SseEmitter.event()
-                        .name("visit-analysis")
+                        .name("visit-analysis-" + type)
                         .data(data));
             } catch (Exception e) {
                 emitter.completeWithError(e);
@@ -236,7 +236,7 @@ public class SseEmitters {
         for (SseEmitter emitter : emitters) {
             try {
                 emitter.send(SseEmitter.event()
-                        .name("recommend-analysis")
+                        .name("recommend-analysis-" + type)
                         .data(data));
             } catch (Exception e) {
                 emitter.completeWithError(e);

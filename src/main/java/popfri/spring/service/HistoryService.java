@@ -53,6 +53,7 @@ public class HistoryService {
                 .toList();
 
         recHistoryRepository.saveAll(result);
+        sseEmitters.sendDailyRecommendAnalysisToAllTypes();
     }
 
     //추천 기록 조회 서비스

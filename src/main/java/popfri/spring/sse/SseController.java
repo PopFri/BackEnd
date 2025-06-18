@@ -54,7 +54,7 @@ public class SseController {
         try {
             List<HistoryResponse.VisitAnalysisDTO> data = sseEmitters.getVisitAnalysisData("day", type);
             emitter.send(SseEmitter.event()
-                    .name("visit-analysis")
+                    .name("visit-analysis-" + type)
                     .data(data));
         } catch (IOException e) {
             emitter.completeWithError(e);
@@ -75,7 +75,7 @@ public class SseController {
         try {
             List<HistoryResponse.VisitAnalysisDTO> data = sseEmitters.getRecommendAnalysisData("day", type);
             emitter.send(SseEmitter.event()
-                    .name("recommend-analysis")
+                    .name("recommend-analysis-" + type)
                     .data(data));
         } catch (IOException e) {
             emitter.completeWithError(e);
