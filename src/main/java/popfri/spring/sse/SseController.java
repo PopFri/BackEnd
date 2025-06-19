@@ -6,6 +6,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import popfri.spring.apiPayload.ApiResponse;
 import popfri.spring.web.dto.HistoryResponse;
 
 import java.io.IOException;
@@ -19,15 +20,15 @@ public class SseController {
     private final SseEmitters sseEmitters;
 
     @GetMapping("/analysis/visit")
-    public ResponseEntity<List<HistoryResponse.VisitAnalysisDTO>> getVisitAnalysisToday(@RequestParam String date, @RequestParam String type) {
+    public ApiResponse<List<HistoryResponse.VisitAnalysisDTO>> getVisitAnalysisToday(@RequestParam String date, @RequestParam String type) {
         List<HistoryResponse.VisitAnalysisDTO> result = sseEmitters.getVisitAnalysisData(date, type);
-        return ResponseEntity.ok(result);
+        return ApiResponse.onSuccess(result);
     }
 
     @GetMapping("/analysis/recommend")
-    public ResponseEntity<List<HistoryResponse.VisitAnalysisDTO>> getRecommendAnalysisToday(@RequestParam String date, @RequestParam String type) {
+    public ApiResponse<List<HistoryResponse.VisitAnalysisDTO>> getRecommendAnalysisToday(@RequestParam String date, @RequestParam String type) {
         List<HistoryResponse.VisitAnalysisDTO> result = sseEmitters.getRecommendAnalysisData(date, type);
-        return ResponseEntity.ok(result);
+        return ApiResponse.onSuccess(result);
     }
 
     @GetMapping(value = "/connect", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
