@@ -12,18 +12,18 @@ public class CorsMvcConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry corsRegistry) {
 
-        corsRegistry.addMapping("/**")
-                .exposedHeaders("Set-Cookie")
-                .allowedOrigins(frontendUrl)
-                .allowedMethods("*")
-                .allowedHeaders("*")
-                .allowCredentials(true);
-
         corsRegistry.addMapping("/sse/**")
                 .allowedOrigins("*")
                 .allowedMethods("*")
                 .allowedHeaders("*")
                 .exposedHeaders("Set-Cookie")
                 .allowCredentials(false);
+
+        corsRegistry.addMapping("/**")
+                .exposedHeaders("Set-Cookie")
+                .allowedOrigins(frontendUrl)
+                .allowedMethods("*")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 }
