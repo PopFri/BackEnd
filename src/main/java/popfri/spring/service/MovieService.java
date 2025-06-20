@@ -2,6 +2,7 @@ package popfri.spring.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
@@ -48,8 +49,8 @@ public class MovieService {
     private String koficKey;
 
     private final Executor asyncExecutor = Executors.newFixedThreadPool(10);
-    private final Map<String, MovieResponse.TmdbDataByTitleDTO> tmdbTitleCache = new ConcurrentHashMap<>();
-    private final Map<String, List<MovieResponse.MovieRankingDTO>> boxofficeCache = new ConcurrentHashMap<>();
+    private final Cache<String, MovieResponse.TmdbDataByTitleDTO> tmdbTitleCache;
+    private final Cache<String, List<MovieResponse.MovieRankingDTO>> boxofficeCache;
 
     public CompletableFuture<MovieResponse.MovieDetailDTO> loadMovieAsync(String movieId) {
         return CompletableFuture.supplyAsync(() -> loadMovie(movieId), asyncExecutor);
@@ -368,7 +369,8 @@ public class MovieService {
 
     // 영화 제목으로 TMDB API 호출
     public MovieResponse.TmdbDataByTitleDTO searchTmdbMovieByTitle(String title) {
-        if (tmdbTitleCache.containsKey(title)) return tmdbTitleCache.get(title);
+        MovieResponse.TmdbDataByTitleDTO cached = tmdbTitleCache.getIfPresent(title);
+        if (cached != null) return cached;
 
         WebClient webClient = WebClient.builder()
                 .baseUrl("https://api.themoviedb.org/3/search/movie")
@@ -392,13 +394,17 @@ public class MovieService {
                 .max(Comparator.comparingDouble(MovieResponse.TmdbDataByTitleDTO::getPopularity))
                 .orElse(null);
 
-        tmdbTitleCache.put(title, result);
+        if (result != null) {
+            tmdbTitleCache.put(title, result);
+        }
+
         return result;
     }
 
     // 박스오피스 랭킹 반환
     public List<MovieResponse.MovieRankingDTO> getBoxofficeRanking(String date) {
-        if (boxofficeCache.containsKey(date)) return boxofficeCache.get(date);
+        List<MovieResponse.MovieRankingDTO> cached = boxofficeCache.getIfPresent(date);
+        if (cached != null) return cached;
 
         WebClient webClient = WebClient.builder()
                 .baseUrl("http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json")
