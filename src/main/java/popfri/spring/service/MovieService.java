@@ -48,6 +48,57 @@ public class MovieService {
     @Value("${KOFIC_API_KEY}")
     private String koficKey;
 
+    private final List<String> dummyDate = List.of("20140712", "20220805", "20180420", "20241115");
+    private Integer dummyIndex = 0;
+    private final Map<String, List<String>> dummyMovie = Map.ofEntries(
+            Map.entry("20140712", List.of(
+                    "군도: 민란의 시대",
+                    "드래곤 길들이기 2",
+                    "혹성탈출: 반격의 서막",
+                    "신의 한 수",
+                    "주온 : 끝의 시작",
+                    "트랜스포머: 사라진 시대",
+                    "프란시스 하",
+                    "마담 프루스트의 비밀정원",
+                    "그녀",
+                    "명량"
+            )),
+            Map.entry("20220805", List.of(
+                    "한산: 용의 출현",
+                    "비상선언",
+                    "탑건: 매버릭",
+                    "미니언즈 2",
+                    "뽀로로 극장판 드래곤캐슬 대모험",
+                    "헤어질 결심",
+                    "외계+인 1부",
+                    "명탐정 코난: 할로윈의 신부",
+                    "토르: 러브 앤 썬더"
+            )),
+            Map.entry("20180420", List.of(
+                    "어벤져스: 인피니티 워",
+                    "램페이지",
+                    "혹성탈출: 반격의 서막",
+                    "레디 플레이어 원",
+                    "콰이어트 플레이스",
+                    "곤지암",
+                    "지금 만나러 갑니다",
+                    "퍼시픽 림: 업라이징",
+                    "리틀 포레스트"
+            )),
+            Map.entry("20241115", List.of(
+                    "글래디에이터 Ⅱ",
+                    "청설",
+                    "사흘",
+                    "베놈: 라스트 댄스",
+                    "아마존 활명수",
+                    "히든페이스",
+                    "연소일기",
+                    "날씨의 아이",
+                    "컨택트",
+                    "4월이 되면 그녀는"
+            ))
+    );
+
     private final Executor asyncExecutor = Executors.newFixedThreadPool(10);
     private final Cache<String, MovieResponse.TmdbDataByTitleDTO> tmdbTitleCache;
     private final Cache<String, List<MovieResponse.MovieRankingDTO>> boxofficeCache;
@@ -454,21 +505,28 @@ public class MovieService {
         boxofficeCache.put(date, rankingList);
         return rankingList;
     }
-
     // 탐색된 영화 리스트 반환
     public MovieResponse.MovieDiscoveryDTO getDiscoveryMovieList() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-        LocalDate startDate = LocalDate.parse("20031201", formatter);
-        LocalDate endDate = LocalDate.now();
+//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+//        LocalDate startDate = LocalDate.parse("20031201", formatter);
+//        LocalDate endDate = LocalDate.now();
+//
+//        long startEpochDay = startDate.toEpochDay();
+//        long endEpochDay = endDate.toEpochDay();
+//
+//        long randomDay = ThreadLocalRandom.current().nextLong(startEpochDay, endEpochDay + 1);
+//        LocalDate randomDate = LocalDate.ofEpochDay(randomDay);
+//
+//        String date = randomDate.format(formatter);
+//        List<MovieResponse.MovieRankingDTO> rankingList = getBoxofficeRanking(date);
 
-        long startEpochDay = startDate.toEpochDay();
-        long endEpochDay = endDate.toEpochDay();
-
-        long randomDay = ThreadLocalRandom.current().nextLong(startEpochDay, endEpochDay + 1);
-        LocalDate randomDate = LocalDate.ofEpochDay(randomDay);
-
-        String date = randomDate.format(formatter);
-        List<MovieResponse.MovieRankingDTO> rankingList = getBoxofficeRanking(date);
+        String date = dummyDate.get(dummyIndex);
+        dummyIndex = (dummyIndex + 1) % dummyDate.size();
+        List<MovieResponse.MovieRankingDTO> rankingList = dummyMovie.get(date).stream()
+                .map(movie -> MovieResponse.MovieRankingDTO.builder()
+                        .movieName(movie)
+                        .build())
+                .toList();
 
         List<CompletableFuture<MovieResponse.MovieDetailDTO>> futures = rankingList.stream()
                 .map(r -> {
