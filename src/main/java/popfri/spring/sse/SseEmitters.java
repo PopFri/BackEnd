@@ -2,7 +2,6 @@ package popfri.spring.sse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import popfri.spring.domain.RecHistory;
@@ -12,10 +11,7 @@ import popfri.spring.repository.RecHistoryRepository;
 import popfri.spring.repository.VisitHistoryRepository;
 import popfri.spring.web.dto.HistoryResponse;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -32,24 +28,50 @@ public class SseEmitters {
 
     private final List<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
-    SseEmitter add(SseEmitter emitter) {
-        this.emitters.add(emitter);
+    public SseEmitter add(SseEmitter emitter) {
+        emitters.add(emitter);
         log.info("new emitter added: {}", emitter);
         log.info("emitter list size: {}", emitters.size());
-        emitter.onCompletion(() -> {
-            log.info("onCompletion callback");
-            this.emitters.remove(emitter);    // 만료되면 리스트에서 삭제
-        });
-        emitter.onTimeout(() -> {
-            log.info("onTimeout callback");
-            emitter.complete();
-        });
-
+        emitter.onCompletion(() -> emitters.remove(emitter));
+        emitter.onTimeout(emitter::complete);
         return emitter;
     }
 
     public void remove(SseEmitter emitter) {
-        this.emitters.remove(emitter);
+        emitters.remove(emitter);
+    }
+
+    public Gender parseGender(String genderStr) {
+        try {
+            return Gender.valueOf(genderStr.toUpperCase());
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private LocalDate[] getBirthRange(String ageGroup) {
+        int year = LocalDate.now().getYear();
+        return switch (ageGroup) {
+            case "10" -> new LocalDate[]{LocalDate.of(year - 19, 1, 1), LocalDate.of(year - 10, 12, 31)};
+            case "20" -> new LocalDate[]{LocalDate.of(year - 29, 1, 1), LocalDate.of(year - 20, 12, 31)};
+            case "30" -> new LocalDate[]{LocalDate.of(year - 39, 1, 1), LocalDate.of(year - 30, 12, 31)};
+            case "40" -> new LocalDate[]{LocalDate.of(year - 200, 1, 1), LocalDate.of(year - 40, 12, 31)};
+            default -> throw new IllegalArgumentException("Invalid age group: " + ageGroup);
+        };
+    }
+
+    private LocalDateTime[] getDateRange(String date) {
+        LocalDate today = LocalDate.now();
+        return switch (date.toLowerCase()) {
+            case "day" -> new LocalDateTime[]{today.atStartOfDay(), today.atTime(LocalTime.MAX)};
+            case "week" -> new LocalDateTime[]{
+                    today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).atStartOfDay(),
+                    today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).atTime(LocalTime.MAX)};
+            case "month" -> new LocalDateTime[]{
+                    today.withDayOfMonth(1).atStartOfDay(),
+                    today.withDayOfMonth(today.lengthOfMonth()).atTime(LocalTime.MAX)};
+            default -> throw new IllegalArgumentException("Invalid date format: " + date);
+        };
     }
 
     public <T> List<HistoryResponse.VisitAnalysisDTO> getAnalysisData(
@@ -58,243 +80,82 @@ public class SseEmitters {
             Function<T, Integer> tmdbIdExtractor,
             Function<T, String> movieNameExtractor
     ) {
-        LocalDate today = LocalDate.now();
-        LocalDateTime start;
-        LocalDateTime end;
-        LocalDate birthStart;
-        LocalDate birthEnd;
-        int currentYear = today.getYear();
-
-        switch (date.toLowerCase()) {
-            case "day":
-                start = today.atStartOfDay();
-                end = today.atTime(LocalTime.MAX);
-                break;
-            case "week":
-                start = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).atStartOfDay();
-                end = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).atTime(LocalTime.MAX);
-                break;
-            case "month":
-                start = today.withDayOfMonth(1).atStartOfDay();
-                end = today.withDayOfMonth(today.lengthOfMonth()).atTime(LocalTime.MAX);
-                break;
-            default:
-                throw new IllegalArgumentException("지원하지 않는 날짜 형식: " + date);
-        }
-
-        List<T> data;
-
-        switch (type) {
-            case "default":
-                data = baseQuery.apply(start, end);
-                break;
-            case "male":
-                data = baseQuery.apply(start, end); // override 아래에서
-                break;
-            case "female":
-                data = baseQuery.apply(start, end); // override 아래에서
-                break;
-            case "10":
-                birthStart = LocalDate.of(currentYear - 19, 1, 1);
-                birthEnd = LocalDate.of(currentYear - 10, 12, 31);
-                data = baseQuery.apply(start, end); // override 아래에서
-                break;
-            case "20":
-                birthStart = LocalDate.of(currentYear - 29, 1, 1);
-                birthEnd = LocalDate.of(currentYear - 20, 12, 31);
-                data = baseQuery.apply(start, end);
-                break;
-            case "30":
-                birthStart = LocalDate.of(currentYear - 39, 1, 1);
-                birthEnd = LocalDate.of(currentYear - 30, 12, 31);
-                data = baseQuery.apply(start, end);
-                break;
-            case "40":
-                birthStart = LocalDate.of(currentYear - 200, 1, 1);
-                birthEnd = LocalDate.of(currentYear - 40, 12, 31);
-                data = baseQuery.apply(start, end);
-                break;
-            default:
-                throw new IllegalArgumentException("지원하지 않는 유형: " + type);
-        }
+        LocalDateTime[] dateRange = getDateRange(date);
+        List<T> data = baseQuery.apply(dateRange[0], dateRange[1]);
 
         return data.stream()
                 .collect(Collectors.groupingBy(tmdbIdExtractor))
                 .entrySet().stream()
-                .map(entry -> {
-                    T sample = entry.getValue().get(0);
-                    return new HistoryResponse.VisitAnalysisDTO(
-                            entry.getKey(),
-                            movieNameExtractor.apply(sample),
-                            entry.getValue().size()
-                    );
-                })
+                .map(entry -> new HistoryResponse.VisitAnalysisDTO(
+                        entry.getKey(),
+                        movieNameExtractor.apply(entry.getValue().get(0)),
+                        entry.getValue().size()
+                ))
                 .sorted(Comparator.comparingLong(HistoryResponse.VisitAnalysisDTO::getCount).reversed())
                 .collect(Collectors.toList());
     }
 
     public List<HistoryResponse.VisitAnalysisDTO> getVisitAnalysisData(String date, String type) {
-        return getAnalysisData(
-                date,
-                type,
-                (start, end) -> switch (type) {
-                    case "default" -> visitHistoryRepository.findAllByUpdatedAtBetween(start, end);
-                    case "male" -> visitHistoryRepository.findAllByUpdatedAtBetweenAndUser_Gender(start, end, Gender.MALE);
-                    case "female" -> visitHistoryRepository.findAllByUpdatedAtBetweenAndUser_Gender(start, end, Gender.FEMALE);
-                    case "10" -> {
-                        LocalDate bs = LocalDate.of(LocalDate.now().getYear() - 19, 1, 1);
-                        LocalDate be = LocalDate.of(LocalDate.now().getYear() - 10, 12, 31);
-                        yield visitHistoryRepository.findAllByUpdatedAtBetweenAndUser_BirthBetween(start, end, bs, be);
-                    }
-                    case "20" -> {
-                        LocalDate bs = LocalDate.of(LocalDate.now().getYear() - 29, 1, 1);
-                        LocalDate be = LocalDate.of(LocalDate.now().getYear() - 20, 12, 31);
-                        yield visitHistoryRepository.findAllByUpdatedAtBetweenAndUser_BirthBetween(start, end, bs, be);
-                    }
-                    case "30" -> {
-                        LocalDate bs = LocalDate.of(LocalDate.now().getYear() - 39, 1, 1);
-                        LocalDate be = LocalDate.of(LocalDate.now().getYear() - 30, 12, 31);
-                        yield visitHistoryRepository.findAllByUpdatedAtBetweenAndUser_BirthBetween(start, end, bs, be);
-                    }
-                    case "40" -> {
-                        LocalDate bs = LocalDate.of(LocalDate.now().getYear() - 200, 1, 1); // 200살까지 고려
-                        LocalDate be = LocalDate.of(LocalDate.now().getYear() - 40, 12, 31);
-                        yield visitHistoryRepository.findAllByUpdatedAtBetweenAndUser_BirthBetween(start, end, bs, be);
-                    }
-                    default -> throw new IllegalArgumentException("유형 오류");
-                },
-                VisitHistory::getTmdbId,
-                VisitHistory::getMovieName
-        );
+        return getAnalysisData(date, type, (start, end) -> switch (type) {
+            case "default" -> visitHistoryRepository.findAllByUpdatedAtBetween(start, end);
+            case "male" -> visitHistoryRepository.findAllByUpdatedAtBetweenAndUser_Gender(start, end, Gender.MALE);
+            case "female" -> visitHistoryRepository.findAllByUpdatedAtBetweenAndUser_Gender(start, end, Gender.FEMALE);
+            case "10", "20", "30", "40" -> {
+                LocalDate[] range = getBirthRange(type);
+                yield visitHistoryRepository.findAllByUpdatedAtBetweenAndUser_BirthBetween(start, end, range[0], range[1]);
+            }
+            default -> throw new IllegalArgumentException("Invalid type: " + type);
+        }, VisitHistory::getTmdbId, VisitHistory::getMovieName);
     }
 
     public List<HistoryResponse.VisitAnalysisDTO> getRecommendAnalysisData(String date, String type) {
-        return getAnalysisData(
-                date,
-                type,
-                (start, end) -> switch (type) {
-                    case "default" -> recHistoryRepository.findAllByUpdatedAtBetween(start, end);
-                    case "male" -> recHistoryRepository.findAllByUpdatedAtBetweenAndUser_Gender(start, end, Gender.MALE);
-                    case "female" -> recHistoryRepository.findAllByUpdatedAtBetweenAndUser_Gender(start, end, Gender.FEMALE);
-                    case "10" -> {
-                        LocalDate bs = LocalDate.of(LocalDate.now().getYear() - 19, 1, 1);
-                        LocalDate be = LocalDate.of(LocalDate.now().getYear() - 10, 12, 31);
-                        yield recHistoryRepository.findAllByUpdatedAtBetweenAndUser_BirthBetween(start, end, bs, be);
-                    }
-                    case "20" -> {
-                        LocalDate bs = LocalDate.of(LocalDate.now().getYear() - 29, 1, 1);
-                        LocalDate be = LocalDate.of(LocalDate.now().getYear() - 20, 12, 31);
-                        yield recHistoryRepository.findAllByUpdatedAtBetweenAndUser_BirthBetween(start, end, bs, be);
-                    }
-                    case "30" -> {
-                        LocalDate bs = LocalDate.of(LocalDate.now().getYear() - 39, 1, 1);
-                        LocalDate be = LocalDate.of(LocalDate.now().getYear() - 30, 12, 31);
-                        yield recHistoryRepository.findAllByUpdatedAtBetweenAndUser_BirthBetween(start, end, bs, be);
-                    }
-                    case "40" -> {
-                        LocalDate bs = LocalDate.of(LocalDate.now().getYear() - 200, 1, 1); // 200살까지 고려
-                        LocalDate be = LocalDate.of(LocalDate.now().getYear() - 40, 12, 31);
-                        yield recHistoryRepository.findAllByUpdatedAtBetweenAndUser_BirthBetween(start, end, bs, be);
-                    }
-                    default -> throw new IllegalArgumentException("유형 오류");
-                },
-                RecHistory::getTmdbId,
-                RecHistory::getMovieName
-        );
-    }
-
-    public Gender parseGender(String genderStr) {
-        try {
-            return Gender.valueOf(genderStr.toUpperCase()); // 대소문자 구분 방지
-        } catch (IllegalArgumentException | NullPointerException e) {
-            return null; // 또는 예외 던지거나 기본값 반환
-        }
+        return getAnalysisData(date, type, (start, end) -> switch (type) {
+            case "default" -> recHistoryRepository.findAllByUpdatedAtBetween(start, end);
+            case "male" -> recHistoryRepository.findAllByUpdatedAtBetweenAndUser_Gender(start, end, Gender.MALE);
+            case "female" -> recHistoryRepository.findAllByUpdatedAtBetweenAndUser_Gender(start, end, Gender.FEMALE);
+            case "10", "20", "30", "40" -> {
+                LocalDate[] range = getBirthRange(type);
+                yield recHistoryRepository.findAllByUpdatedAtBetweenAndUser_BirthBetween(start, end, range[0], range[1]);
+            }
+            default -> throw new IllegalArgumentException("Invalid type: " + type);
+        }, RecHistory::getTmdbId, RecHistory::getMovieName);
     }
 
     public List<HistoryResponse.VisitAnalysisDTO> getPersonalRecommendData(String gender, String age) {
         Gender userGender = parseGender(gender);
-        return getAnalysisData(
-                "week",
-                age,
-                (start, end) -> switch (age) {
-                    case "10" -> {
-                        LocalDate bs = LocalDate.of(LocalDate.now().getYear() - 19, 1, 1);
-                        LocalDate be = LocalDate.of(LocalDate.now().getYear() - 10, 12, 31);
-                        yield visitHistoryRepository.findAllByUpdatedAtBetweenAndUser_GenderAndUser_BirthBetween(start, end, userGender, bs, be);
-                    }
-                    case "20" -> {
-                        LocalDate bs = LocalDate.of(LocalDate.now().getYear() - 29, 1, 1);
-                        LocalDate be = LocalDate.of(LocalDate.now().getYear() - 20, 12, 31);
-                        yield visitHistoryRepository.findAllByUpdatedAtBetweenAndUser_GenderAndUser_BirthBetween(start, end, userGender, bs, be);
-                    }
-                    case "30" -> {
-                        LocalDate bs = LocalDate.of(LocalDate.now().getYear() - 39, 1, 1);
-                        LocalDate be = LocalDate.of(LocalDate.now().getYear() - 30, 12, 31);
-                        yield visitHistoryRepository.findAllByUpdatedAtBetweenAndUser_GenderAndUser_BirthBetween(start, end, userGender, bs, be);
-                    }
-                    case "40" -> {
-                        LocalDate bs = LocalDate.of(LocalDate.now().getYear() - 200, 1, 1); // 200살까지 고려
-                        LocalDate be = LocalDate.of(LocalDate.now().getYear() - 40, 12, 31);
-                        yield visitHistoryRepository.findAllByUpdatedAtBetweenAndUser_GenderAndUser_BirthBetween(start, end, userGender, bs, be);
-                    }
-                    default -> throw new IllegalArgumentException("유형 오류");
-                },
-                VisitHistory::getTmdbId,
-                VisitHistory::getMovieName
-        );
+        LocalDate[] birthRange = getBirthRange(age);
+        return getAnalysisData("week", age,
+                (start, end) -> visitHistoryRepository.findAllByUpdatedAtBetweenAndUser_GenderAndUser_BirthBetween(
+                        start, end, userGender, birthRange[0], birthRange[1]),
+                VisitHistory::getTmdbId, VisitHistory::getMovieName);
+    }
+
+    private void sendAnalysisData(String eventPrefix, String type, List<HistoryResponse.VisitAnalysisDTO> data) {
+        for (SseEmitter emitter : emitters) {
+            try {
+                emitter.send(SseEmitter.event().name(eventPrefix + "-" + type).data(data));
+            } catch (Exception e) {
+                emitter.completeWithError(e);
+                emitters.remove(emitter);
+            }
+        }
     }
 
     public void sendDailyVisitAnalysis(String type) {
-        List<HistoryResponse.VisitAnalysisDTO> data = getVisitAnalysisData("day", type);
-
-        for (SseEmitter emitter : emitters) {
-            try {
-                emitter.send(SseEmitter.event()
-                        .name("visit-analysis-" + type)
-                        .data(data));
-            } catch (Exception e) {
-                emitter.completeWithError(e);
-                emitters.remove(emitter);
-            }
-        }
-    }
-
-    public void sendDailyVisitAnalysisToAllTypes() {
-        List<String> types = List.of("default", "male", "female", "10", "20", "30", "40");
-
-        for (String type : types) {
-            try {
-                sendDailyVisitAnalysis(type);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
+        sendAnalysisData("visit-analysis", type, getVisitAnalysisData("day", type));
     }
 
     public void sendDailyRecommendAnalysis(String type) {
-        List<HistoryResponse.VisitAnalysisDTO> data = getRecommendAnalysisData("day", type);
+        sendAnalysisData("recommend-analysis", type, getRecommendAnalysisData("day", type));
+    }
 
-        for (SseEmitter emitter : emitters) {
-            try {
-                emitter.send(SseEmitter.event()
-                        .name("recommend-analysis-" + type)
-                        .data(data));
-            } catch (Exception e) {
-                emitter.completeWithError(e);
-                emitters.remove(emitter);
-            }
-        }
+    public void sendDailyVisitAnalysisToAllTypes() {
+        List.of("default", "male", "female", "10", "20", "30", "40")
+                .forEach(this::sendDailyVisitAnalysis);
     }
 
     public void sendDailyRecommendAnalysisToAllTypes() {
-        List<String> types = List.of("default", "male", "female", "10", "20", "30", "40");
-
-        for (String type : types) {
-            try {
-                sendDailyRecommendAnalysis(type);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
+        List.of("default", "male", "female", "10", "20", "30", "40")
+                .forEach(this::sendDailyRecommendAnalysis);
     }
 }
