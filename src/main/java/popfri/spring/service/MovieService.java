@@ -2,6 +2,7 @@ package popfri.spring.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
@@ -26,7 +27,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +47,14 @@ public class MovieService {
 
     @Value("${KOFIC_API_KEY}")
     private String koficKey;
+
+    private final Executor asyncExecutor = Executors.newFixedThreadPool(10);
+    private final Cache<String, MovieResponse.TmdbDataByTitleDTO> tmdbTitleCache;
+    private final Cache<String, List<MovieResponse.MovieRankingDTO>> boxofficeCache;
+
+    public CompletableFuture<MovieResponse.MovieDetailDTO> loadMovieAsync(String movieId) {
+        return CompletableFuture.supplyAsync(() -> loadMovie(movieId), asyncExecutor);
+    }
 
     // movie detail api 호출
     public String loadMovieDetail(String movieId) {
@@ -364,6 +373,9 @@ public class MovieService {
 
     // 영화 제목으로 TMDB API 호출
     public MovieResponse.TmdbDataByTitleDTO searchTmdbMovieByTitle(String title) {
+        MovieResponse.TmdbDataByTitleDTO cached = tmdbTitleCache.getIfPresent(title);
+        if (cached != null) return cached;
+
         WebClient webClient = WebClient.builder()
                 .baseUrl("https://api.themoviedb.org/3/search/movie")
                 .defaultHeader("Authorization", "Bearer " + tmdbKey)
@@ -380,24 +392,29 @@ public class MovieService {
                 .bodyToMono(MovieResponse.TmdbDataByTitleListDTO.class)
                 .block();
 
-        if(movieList == null) {
-            throw new MovieHandler(ErrorStatus._TMDB_CONNECT_FAIL);
-        }
+        if (movieList == null) throw new MovieHandler(ErrorStatus._TMDB_CONNECT_FAIL);
 
-        return movieList.getMovieDataList().stream()
+        MovieResponse.TmdbDataByTitleDTO result = movieList.getMovieDataList().stream()
                 .max(Comparator.comparingDouble(MovieResponse.TmdbDataByTitleDTO::getPopularity))
                 .orElse(null);
+
+        if (result != null) {
+            tmdbTitleCache.put(title, result);
+        }
+
+        return result;
     }
 
     // 박스오피스 랭킹 반환
     public List<MovieResponse.MovieRankingDTO> getBoxofficeRanking(String date) {
-        List<MovieResponse.MovieRankingDTO> rankingList = new ArrayList<>();
-        String url = "http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json";
+        List<MovieResponse.MovieRankingDTO> cached = boxofficeCache.getIfPresent(date);
+        if (cached != null) return cached;
+
         WebClient webClient = WebClient.builder()
-                .baseUrl(url)
+                .baseUrl("http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json")
                 .build();
-        MovieResponse.BoxofficeMovieDataDTO rankingMovie;
-        rankingMovie = webClient.get()
+
+        MovieResponse.BoxofficeMovieDataDTO rankingMovie = webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .queryParam("key", koficKey)
                         .queryParam("targetDt", date)
@@ -405,15 +422,15 @@ public class MovieService {
                 .retrieve()
                 .bodyToMono(MovieResponse.BoxofficeMovieDataDTO.class)
                 .block();
-        if(rankingMovie == null) {
-            throw new MovieHandler(ErrorStatus._KOFIC_CONNECT_FAIL);
-        } else if(rankingMovie.getBoxOfficeResult().getMovieDataList().isEmpty()) {
-            throw new MovieHandler(ErrorStatus._MOVIE_DATE_FAIL);
-        }
 
-        for(MovieResponse.BoxofficeMovieDataDTO.BoxofficeResult.MovieData movieData : rankingMovie.getBoxOfficeResult().getMovieDataList()) {
+        if (rankingMovie == null) throw new MovieHandler(ErrorStatus._KOFIC_CONNECT_FAIL);
+        if (rankingMovie.getBoxOfficeResult().getMovieDataList().isEmpty())
+            throw new MovieHandler(ErrorStatus._MOVIE_DATE_FAIL);
+
+        List<MovieResponse.MovieRankingDTO> rankingList = new ArrayList<>();
+        for (MovieResponse.BoxofficeMovieDataDTO.BoxofficeResult.MovieData movieData : rankingMovie.getBoxOfficeResult().getMovieDataList()) {
             MovieResponse.TmdbDataByTitleDTO tmdbData = searchTmdbMovieByTitle(movieData.getTitle());
-            if(tmdbData == null) {
+            if (tmdbData == null) {
                 rankingList.add(MovieResponse.MovieRankingDTO.builder()
                         .rank(movieData.getRank())
                         .movieName(movieData.getTitle())
@@ -422,23 +439,24 @@ public class MovieService {
                         .overView("정보가 없습니다.")
                         .imageUrl(null)
                         .build());
-                continue;
+            } else {
+                rankingList.add(MovieResponse.MovieRankingDTO.builder()
+                        .rank(movieData.getRank())
+                        .movieName(movieData.getTitle())
+                        .backgroundImageUrl(tmdbData.getBackgroundImageUrl())
+                        .movieId(tmdbData.getMovieId())
+                        .overView(tmdbData.getOverView())
+                        .imageUrl(tmdbData.getImageUrl())
+                        .build());
             }
-            rankingList.add(MovieResponse.MovieRankingDTO.builder()
-                            .rank(movieData.getRank())
-                            .movieName(movieData.getTitle())
-                            .backgroundImageUrl(tmdbData.getBackgroundImageUrl())
-                            .movieId(tmdbData.getMovieId())
-                            .overView(tmdbData.getOverView())
-                            .imageUrl(tmdbData.getImageUrl())
-                            .build());
         }
+
+        boxofficeCache.put(date, rankingList);
         return rankingList;
     }
 
     // 탐색된 영화 리스트 반환
     public MovieResponse.MovieDiscoveryDTO getDiscoveryMovieList() {
-        List<MovieResponse.MovieDetailDTO> movieList = new ArrayList<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
         LocalDate startDate = LocalDate.parse("20031201", formatter);
         LocalDate endDate = LocalDate.now();
@@ -451,21 +469,27 @@ public class MovieService {
 
         String date = randomDate.format(formatter);
         List<MovieResponse.MovieRankingDTO> rankingList = getBoxofficeRanking(date);
-        for (MovieResponse.MovieRankingDTO ranking : rankingList) {
-            MovieResponse.TmdbDataByTitleDTO tmdbData = searchTmdbMovieByTitle(ranking.getMovieName());
-            if (tmdbData == null) {
-                log.warn("검색 실패: {}", ranking.getMovieName());
-                continue;
-            }
-            movieList.add(
-                    loadMovie(String.valueOf(tmdbData.getMovieId()))
-            );
-        }
+
+        List<CompletableFuture<MovieResponse.MovieDetailDTO>> futures = rankingList.stream()
+                .map(r -> {
+                    MovieResponse.TmdbDataByTitleDTO tmdbData = searchTmdbMovieByTitle(r.getMovieName());
+                    if (tmdbData == null) return null;
+                    return loadMovieAsync(String.valueOf(tmdbData.getMovieId()));
+                })
+                .filter(Objects::nonNull)
+                .toList();
+
+        List<MovieResponse.MovieDetailDTO> movieList = futures.stream()
+                .map(CompletableFuture::join)
+                .filter(Objects::nonNull)
+                .toList();
+
         return MovieResponse.MovieDiscoveryDTO.builder()
                 .date(date.substring(0, 4) + "." + date.substring(4, 6) + "." + date.substring(6, 8) + " Box Office Rank")
                 .movies(movieList)
                 .build();
     }
+
 
     //영화 탐색 결과 반환
     public MovieResponse.MovieDiscoveryResultDTO getMovieDiscoveryResult(List<MovieResponse.DiscoveryMovie> choosedMovie) {
