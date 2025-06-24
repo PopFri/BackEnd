@@ -209,7 +209,7 @@ public class MovieService {
             String movieImages = loadMovieImages(movieId);
             JsonNode backdropsNode = objectMapper.readTree(movieImages).path("backdrops");
             List<JsonNode> limitedBackdrops = new ArrayList<>();
-            for (int i = 0; i < Math.min(7, backdropsNode.size()); i++) {
+            for (int i = 0; i < Math.min(9, backdropsNode.size()); i++) {
                 limitedBackdrops.add(backdropsNode.get(i));
             }
             List<MovieResponse.MovieDetailDTO.Images> imagesList =

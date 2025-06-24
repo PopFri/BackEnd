@@ -203,6 +203,47 @@ public class SseEmitters {
         );
     }
 
+    public Gender parseGender(String genderStr) {
+        try {
+            return Gender.valueOf(genderStr.toUpperCase()); // 대소문자 구분 방지
+        } catch (IllegalArgumentException | NullPointerException e) {
+            return null; // 또는 예외 던지거나 기본값 반환
+        }
+    }
+
+    public List<HistoryResponse.VisitAnalysisDTO> getPersonalRecommendData(String gender, String age) {
+        Gender userGender = parseGender(gender);
+        return getAnalysisData(
+                "week",
+                age,
+                (start, end) -> switch (age) {
+                    case "10" -> {
+                        LocalDate bs = LocalDate.of(LocalDate.now().getYear() - 19, 1, 1);
+                        LocalDate be = LocalDate.of(LocalDate.now().getYear() - 10, 12, 31);
+                        yield visitHistoryRepository.findAllByUpdatedAtBetweenAndUser_GenderAndUser_BirthBetween(start, end, userGender, bs, be);
+                    }
+                    case "20" -> {
+                        LocalDate bs = LocalDate.of(LocalDate.now().getYear() - 29, 1, 1);
+                        LocalDate be = LocalDate.of(LocalDate.now().getYear() - 20, 12, 31);
+                        yield visitHistoryRepository.findAllByUpdatedAtBetweenAndUser_GenderAndUser_BirthBetween(start, end, userGender, bs, be);
+                    }
+                    case "30" -> {
+                        LocalDate bs = LocalDate.of(LocalDate.now().getYear() - 39, 1, 1);
+                        LocalDate be = LocalDate.of(LocalDate.now().getYear() - 30, 12, 31);
+                        yield visitHistoryRepository.findAllByUpdatedAtBetweenAndUser_GenderAndUser_BirthBetween(start, end, userGender, bs, be);
+                    }
+                    case "40" -> {
+                        LocalDate bs = LocalDate.of(LocalDate.now().getYear() - 200, 1, 1); // 200살까지 고려
+                        LocalDate be = LocalDate.of(LocalDate.now().getYear() - 40, 12, 31);
+                        yield visitHistoryRepository.findAllByUpdatedAtBetweenAndUser_GenderAndUser_BirthBetween(start, end, userGender, bs, be);
+                    }
+                    default -> throw new IllegalArgumentException("유형 오류");
+                },
+                VisitHistory::getTmdbId,
+                VisitHistory::getMovieName
+        );
+    }
+
     public void sendDailyVisitAnalysis(String type) {
         List<HistoryResponse.VisitAnalysisDTO> data = getVisitAnalysisData("day", type);
 
