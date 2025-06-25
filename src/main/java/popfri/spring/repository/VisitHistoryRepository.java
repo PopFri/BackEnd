@@ -17,4 +17,9 @@ public interface VisitHistoryRepository extends JpaRepository<VisitHistory, Long
     List<VisitHistory> findAllByUpdatedAtBetween(LocalDateTime start, LocalDateTime end);
     List<VisitHistory> findAllByUpdatedAtBetweenAndUser_Gender(LocalDateTime start, LocalDateTime end, Gender gender);
     List<VisitHistory> findAllByUpdatedAtBetweenAndUser_BirthBetween(LocalDateTime start, LocalDateTime end, LocalDate birthStart, LocalDate birthEnd);
+    List<VisitHistory> findAllByUpdatedAtBetweenAndUser_GenderAndUser_BirthBetween(
+            LocalDateTime start, LocalDateTime end,
+            Gender gender,
+            LocalDate birthStart, LocalDate birthEnd
+    );
 }

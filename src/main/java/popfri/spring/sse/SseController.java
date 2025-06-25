@@ -31,6 +31,12 @@ public class SseController {
         return ApiResponse.onSuccess(result);
     }
 
+    @GetMapping("/analysis/personal")
+    public ApiResponse<List<HistoryResponse.VisitAnalysisDTO>> getPersonalRecommend(@RequestParam String gender, @RequestParam String age) {
+        List<HistoryResponse.VisitAnalysisDTO> result = sseEmitters.getPersonalRecommendData(gender, age);
+        return ApiResponse.onSuccess(result);
+    }
+
     @GetMapping(value = "/connect", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public ResponseEntity<SseEmitter> connect() {
         SseEmitter emitter = new SseEmitter(5 * 60 * 1000L);

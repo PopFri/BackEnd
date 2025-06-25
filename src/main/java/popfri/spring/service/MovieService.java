@@ -209,7 +209,7 @@ public class MovieService {
             String movieImages = loadMovieImages(movieId);
             JsonNode backdropsNode = objectMapper.readTree(movieImages).path("backdrops");
             List<JsonNode> limitedBackdrops = new ArrayList<>();
-            for (int i = 0; i < Math.min(7, backdropsNode.size()); i++) {
+            for (int i = 0; i < Math.min(9, backdropsNode.size()); i++) {
                 limitedBackdrops.add(backdropsNode.get(i));
             }
             List<MovieResponse.MovieDetailDTO.Images> imagesList =
@@ -355,6 +355,7 @@ public class MovieService {
                         .build(movieId))
                 .retrieve()
                 .bodyToMono(MovieResponse.TmdbMovieRecResDTO.class)
+                .defaultIfEmpty(new MovieResponse.TmdbMovieRecResDTO())
                 .block();
 
         //response build
@@ -498,6 +499,9 @@ public class MovieService {
         int recommendSize = maxRecommendSize / choosedMovie.size();
         for(MovieResponse.DiscoveryMovie movie: choosedMovie) {
             List<MovieResponse.RecMovieResDTO> allRecommended = recommendMovieFromTMDB(Integer.parseInt(movie.getId()));
+            if (allRecommended == null || allRecommended.size() == 0) {
+                continue;
+            }
             List<MovieResponse.RecMovieResDTO> randomRecommended = new Random()
                     .ints(0, allRecommended.size())
                     .distinct()
