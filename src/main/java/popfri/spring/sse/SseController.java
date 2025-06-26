@@ -55,7 +55,7 @@ public class SseController {
     public ResponseEntity<SseEmitter> subscribeToVisitAnalysis(
             @RequestParam(defaultValue = "default") String type) {
 
-        SseEmitter emitter = new SseEmitter(60 * 1000L);
+        SseEmitter emitter = new SseEmitter(20 * 60 * 1000L);
         sseEmitters.add(emitter);
 
         try {
@@ -76,7 +76,7 @@ public class SseController {
     public ResponseEntity<SseEmitter> subscribeToRecommendAnalysis(
             @RequestParam(defaultValue = "default") String type) {
 
-        SseEmitter emitter = new SseEmitter(60 * 1000L);
+        SseEmitter emitter = new SseEmitter(20 * 60 * 1000L);
         sseEmitters.add(emitter);
 
         try {
