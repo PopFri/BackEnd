@@ -18,6 +18,7 @@ spring:
         format_sql: true
         default_batch_fetch_size: 1000
     database-platform: org.hibernate.dialect.MySQL8Dialect
+    open-in-view: false
   security:
     oauth2:
       client:

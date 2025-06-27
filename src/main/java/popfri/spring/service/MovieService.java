@@ -2,6 +2,7 @@ package popfri.spring.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
@@ -26,7 +27,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.*;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +47,14 @@ public class MovieService {
 
     @Value("${KOFIC_API_KEY}")
     private String koficKey;
+
+    private final Executor asyncExecutor = Executors.newFixedThreadPool(10);
+    private final Cache<String, MovieResponse.TmdbDataByTitleDTO> tmdbTitleCache;
+    private final Cache<String, List<MovieResponse.MovieRankingDTO>> boxofficeCache;
+
+    public CompletableFuture<MovieResponse.MovieDetailDTO> loadMovieAsync(String movieId) {
+        return CompletableFuture.supplyAsync(() -> loadMovie(movieId), asyncExecutor);
+    }
 
     // movie detail api 호출
     public String loadMovieDetail(String movieId) {
@@ -200,7 +209,7 @@ public class MovieService {
             String movieImages = loadMovieImages(movieId);
             JsonNode backdropsNode = objectMapper.readTree(movieImages).path("backdrops");
             List<JsonNode> limitedBackdrops = new ArrayList<>();
-            for (int i = 0; i < Math.min(7, backdropsNode.size()); i++) {
+            for (int i = 0; i < Math.min(9, backdropsNode.size()); i++) {
                 limitedBackdrops.add(backdropsNode.get(i));
             }
             List<MovieResponse.MovieDetailDTO.Images> imagesList =
@@ -218,8 +227,10 @@ public class MovieService {
     //GPT 상황별 영화 추천
     public String getSitMovieToGPT(String situation){
         //WebClient build
-        String prompt = "다음 상황에서 추천하는 영화 이름을 출력해줘. 영화는 반드시 존재하는 영화로 추천해야 하고, 자체적으로 유추한 영화가 출력되어서는 안돼.\n "
-                + situation + "\n 다른 부연설명이나 외적 설정(ex. \"\", 각종 이모지) 없이 영화 제목만 출력해줘.";
+        String prompt = "다음 상황에서 추천하는 영화 이름을 출력해줘. 영화는 인지도가 10점 만점에 6점 이상인 영화들로 추천해줘." +
+                "실제로 존재하는 영화인지 검증하고 답변해줘.\n "
+                + situation + "\n 다른 부연설명이나 외적 설정(ex. \"\", 각종 이모지) 없이 영화 제목만 출력해줘.+\n" +
+                "또한 괄호를 통해 영문 번역본 제공하지 말고 영화제목만 알려줘. (ex. 라라랜드)";
         GPTRequest.gptReqDTO request = new GPTRequest.gptReqDTO(gptModel, prompt);
         WebClient webClient = WebClient.builder()
                 .baseUrl(gptUrl)
@@ -254,8 +265,10 @@ public class MovieService {
         log.info("Current Time: " + now);
 
         //WebClient build
-        String prompt = "다음으로 주어지는 시간에 어울리는 영화 이름을 출력해줘. 영화는 반드시 존재하는 영화로 추천해야 하고, 자체적으로 유추한 영화가 출력되어서는 안돼.\n "
-                + now + "\n 다른 부연설명이나 외적 설정(ex. \"\", 각종 이모지) 없이 영화 제목만 출력해줘. (ex. 인터스텔라)";
+        String prompt = "다음으로 주어지는 시간에 어울리는 영화 이름을 출력해줘. 영화는 인지도가 10점 만점에 6점 이상인 영화들로 추천해줘." +
+                        "실제로 존재하는 영화인지 검증하고 답변해줘.\n " +
+                        now + "\n 다른 부연설명이나 외적 설정(ex. \"\", 각종 이모지) 없이 영화 제목만 출력해줘. " +
+                        "또한 괄호를 통해 영문 번역본 제공하지 말고 영화제목만 알려줘. (ex. 오펜하이머)";
         GPTRequest.gptReqDTO request = new GPTRequest.gptReqDTO(gptModel, prompt);
         WebClient webClient = WebClient.builder()
                 .baseUrl(gptUrl)
@@ -342,6 +355,7 @@ public class MovieService {
                         .build(movieId))
                 .retrieve()
                 .bodyToMono(MovieResponse.TmdbMovieRecResDTO.class)
+                .defaultIfEmpty(new MovieResponse.TmdbMovieRecResDTO())
                 .block();
 
         //response build
@@ -360,6 +374,9 @@ public class MovieService {
 
     // 영화 제목으로 TMDB API 호출
     public MovieResponse.TmdbDataByTitleDTO searchTmdbMovieByTitle(String title) {
+        MovieResponse.TmdbDataByTitleDTO cached = tmdbTitleCache.getIfPresent(title);
+        if (cached != null) return cached;
+
         WebClient webClient = WebClient.builder()
                 .baseUrl("https://api.themoviedb.org/3/search/movie")
                 .defaultHeader("Authorization", "Bearer " + tmdbKey)
@@ -376,24 +393,29 @@ public class MovieService {
                 .bodyToMono(MovieResponse.TmdbDataByTitleListDTO.class)
                 .block();
 
-        if(movieList == null) {
-            throw new MovieHandler(ErrorStatus._TMDB_CONNECT_FAIL);
-        }
+        if (movieList == null) throw new MovieHandler(ErrorStatus._TMDB_CONNECT_FAIL);
 
-        return movieList.getMovieDataList().stream()
+        MovieResponse.TmdbDataByTitleDTO result = movieList.getMovieDataList().stream()
                 .max(Comparator.comparingDouble(MovieResponse.TmdbDataByTitleDTO::getPopularity))
                 .orElse(null);
+
+        if (result != null) {
+            tmdbTitleCache.put(title, result);
+        }
+
+        return result;
     }
 
     // 박스오피스 랭킹 반환
     public List<MovieResponse.MovieRankingDTO> getBoxofficeRanking(String date) {
-        List<MovieResponse.MovieRankingDTO> rankingList = new ArrayList<>();
-        String url = "http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json";
+        List<MovieResponse.MovieRankingDTO> cached = boxofficeCache.getIfPresent(date);
+        if (cached != null) return cached;
+
         WebClient webClient = WebClient.builder()
-                .baseUrl(url)
+                .baseUrl("http://www.kobis.or.kr/kobisopenapi/webservice/rest/boxoffice/searchDailyBoxOfficeList.json")
                 .build();
-        MovieResponse.BoxofficeMovieDataDTO rankingMovie;
-        rankingMovie = webClient.get()
+
+        MovieResponse.BoxofficeMovieDataDTO rankingMovie = webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .queryParam("key", koficKey)
                         .queryParam("targetDt", date)
@@ -401,15 +423,15 @@ public class MovieService {
                 .retrieve()
                 .bodyToMono(MovieResponse.BoxofficeMovieDataDTO.class)
                 .block();
-        if(rankingMovie == null) {
-            throw new MovieHandler(ErrorStatus._KOFIC_CONNECT_FAIL);
-        } else if(rankingMovie.getBoxOfficeResult().getMovieDataList().isEmpty()) {
-            throw new MovieHandler(ErrorStatus._MOVIE_DATE_FAIL);
-        }
 
-        for(MovieResponse.BoxofficeMovieDataDTO.BoxofficeResult.MovieData movieData : rankingMovie.getBoxOfficeResult().getMovieDataList()) {
+        if (rankingMovie == null) throw new MovieHandler(ErrorStatus._KOFIC_CONNECT_FAIL);
+        if (rankingMovie.getBoxOfficeResult().getMovieDataList().isEmpty())
+            throw new MovieHandler(ErrorStatus._MOVIE_DATE_FAIL);
+
+        List<MovieResponse.MovieRankingDTO> rankingList = new ArrayList<>();
+        for (MovieResponse.BoxofficeMovieDataDTO.BoxofficeResult.MovieData movieData : rankingMovie.getBoxOfficeResult().getMovieDataList()) {
             MovieResponse.TmdbDataByTitleDTO tmdbData = searchTmdbMovieByTitle(movieData.getTitle());
-            if(tmdbData == null) {
+            if (tmdbData == null) {
                 rankingList.add(MovieResponse.MovieRankingDTO.builder()
                         .rank(movieData.getRank())
                         .movieName(movieData.getTitle())
@@ -418,23 +440,24 @@ public class MovieService {
                         .overView("정보가 없습니다.")
                         .imageUrl(null)
                         .build());
-                continue;
+            } else {
+                rankingList.add(MovieResponse.MovieRankingDTO.builder()
+                        .rank(movieData.getRank())
+                        .movieName(movieData.getTitle())
+                        .backgroundImageUrl(tmdbData.getBackgroundImageUrl())
+                        .movieId(tmdbData.getMovieId())
+                        .overView(tmdbData.getOverView())
+                        .imageUrl(tmdbData.getImageUrl())
+                        .build());
             }
-            rankingList.add(MovieResponse.MovieRankingDTO.builder()
-                            .rank(movieData.getRank())
-                            .movieName(movieData.getTitle())
-                            .backgroundImageUrl(tmdbData.getBackgroundImageUrl())
-                            .movieId(tmdbData.getMovieId())
-                            .overView(tmdbData.getOverView())
-                            .imageUrl(tmdbData.getImageUrl())
-                            .build());
         }
+
+        boxofficeCache.put(date, rankingList);
         return rankingList;
     }
 
     // 탐색된 영화 리스트 반환
     public MovieResponse.MovieDiscoveryDTO getDiscoveryMovieList() {
-        List<MovieResponse.MovieDetailDTO> movieList = new ArrayList<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
         LocalDate startDate = LocalDate.parse("20031201", formatter);
         LocalDate endDate = LocalDate.now();
@@ -447,21 +470,27 @@ public class MovieService {
 
         String date = randomDate.format(formatter);
         List<MovieResponse.MovieRankingDTO> rankingList = getBoxofficeRanking(date);
-        for (MovieResponse.MovieRankingDTO ranking : rankingList) {
-            MovieResponse.TmdbDataByTitleDTO tmdbData = searchTmdbMovieByTitle(ranking.getMovieName());
-            if (tmdbData == null) {
-                log.warn("검색 실패: {}", ranking.getMovieName());
-                continue;
-            }
-            movieList.add(
-                    loadMovie(String.valueOf(tmdbData.getMovieId()))
-            );
-        }
+
+        List<CompletableFuture<MovieResponse.MovieDetailDTO>> futures = rankingList.stream()
+                .map(r -> {
+                    MovieResponse.TmdbDataByTitleDTO tmdbData = searchTmdbMovieByTitle(r.getMovieName());
+                    if (tmdbData == null) return null;
+                    return loadMovieAsync(String.valueOf(tmdbData.getMovieId()));
+                })
+                .filter(Objects::nonNull)
+                .toList();
+
+        List<MovieResponse.MovieDetailDTO> movieList = futures.stream()
+                .map(CompletableFuture::join)
+                .filter(Objects::nonNull)
+                .toList();
+
         return MovieResponse.MovieDiscoveryDTO.builder()
                 .date(date.substring(0, 4) + "." + date.substring(4, 6) + "." + date.substring(6, 8) + " Box Office Rank")
                 .movies(movieList)
                 .build();
     }
+
 
     //영화 탐색 결과 반환
     public MovieResponse.MovieDiscoveryResultDTO getMovieDiscoveryResult(List<MovieResponse.DiscoveryMovie> choosedMovie) {
@@ -470,6 +499,9 @@ public class MovieService {
         int recommendSize = maxRecommendSize / choosedMovie.size();
         for(MovieResponse.DiscoveryMovie movie: choosedMovie) {
             List<MovieResponse.RecMovieResDTO> allRecommended = recommendMovieFromTMDB(Integer.parseInt(movie.getId()));
+            if (allRecommended == null || allRecommended.size() == 0) {
+                continue;
+            }
             List<MovieResponse.RecMovieResDTO> randomRecommended = new Random()
                     .ints(0, allRecommended.size())
                     .distinct()

@@ -11,11 +11,14 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import popfri.spring.OAuth2.handler.CustomSuccessHandler;
 import popfri.spring.OAuth2.service.CustomOAuth2UserService;
 import popfri.spring.jwt.JWTFilter;
 import popfri.spring.jwt.JWTUtil;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 @Configuration
@@ -30,23 +33,7 @@ public class SecurityConfig {
     private String frontendUrl;
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.cors(corsCustomizer -> corsCustomizer.configurationSource(request -> {
-            CorsConfiguration configuration = new CorsConfiguration();
-
-            //프론트 주소 허용
-            configuration.setAllowedOrigins(Collections.singletonList(frontendUrl));
-            //모든 동작에 대해 허용
-            configuration.setAllowedMethods(Collections.singletonList("*"));
-            configuration.setAllowCredentials(true);
-            configuration.setAllowedHeaders(Collections.singletonList("*"));
-            configuration.setMaxAge(3600L);
-
-            //쿠키 허용
-            configuration.setExposedHeaders(Collections.singletonList("Set-Cookie"));
-            configuration.setExposedHeaders(Collections.singletonList(frontendUrl));
-
-            return configuration;
-        }));
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         http.csrf(AbstractHttpConfigurer::disable);
 
@@ -62,12 +49,33 @@ public class SecurityConfig {
                 .successHandler(customSuccessHandler));
 
         http.authorizeHttpRequests((auth) -> auth
-                .requestMatchers("/swagger", "/swagger-ui.html", "/swagger-ui/**", "/api-docs", "/api-docs/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/swagger", "/swagger-ui.html", "/swagger-ui/**", "/api-docs", "/api-docs/**", "/v3/api-docs/**", "/sse/**").permitAll()
                 .requestMatchers("/", "/oauth2/**", "/login/**").permitAll()
                 .anyRequest().authenticated());
 
         http.sessionManagement((session) -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration defaultConfig = new CorsConfiguration();
+        defaultConfig.setAllowedOrigins(Collections.singletonList(frontendUrl));
+        defaultConfig.setAllowedMethods(Collections.singletonList("*"));
+        defaultConfig.setAllowedHeaders(Collections.singletonList("*"));
+        defaultConfig.setAllowCredentials(true);
+        defaultConfig.setExposedHeaders(Arrays.asList("Set-Cookie"));
+
+        CorsConfiguration sseConfig = new CorsConfiguration();
+        sseConfig.setAllowedOrigins(Collections.singletonList("*"));
+        sseConfig.setAllowedMethods(Collections.singletonList("*"));
+        sseConfig.setAllowedHeaders(Collections.singletonList("*"));
+        sseConfig.setAllowCredentials(false); // '*' 쓸 땐 무조건 false
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/sse/**", sseConfig);
+        source.registerCorsConfiguration("/**", defaultConfig);
+        return source;
     }
 }
