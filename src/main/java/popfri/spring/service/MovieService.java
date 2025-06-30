@@ -278,7 +278,7 @@ public class MovieService {
     //GPT 상황별 영화 추천
     public String getSitMovieToGPT(String situation){
         //WebClient build
-        String prompt = "다음 상황에서 추천하는 영화 이름을 출력해줘. 영화는 인지도가 10점 만점에 6점 이상인 영화들로 추천해줘."
+        String prompt = "다음 상황에서 추천하는 영화 이름 하나를 출력해줘. 영화는 인지도가 10점 만점에 6점 이상인 영화로 추천해줘."
                 + situation + "\n 다른 부연설명이나 외적 설정(ex. \"\", 각종 이모지) 없이 영화 제목만 출력해줘.+\n" +
                 "또한 괄호를 통해 영문 번역본 제공하지 말고 영화제목만 알려줘. (ex. 라라랜드)";
         GPTRequest.gptReqDTO request = new GPTRequest.gptReqDTO(gptModel, prompt);
