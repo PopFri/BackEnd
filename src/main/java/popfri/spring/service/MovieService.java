@@ -281,7 +281,7 @@ public class MovieService {
         String prompt = "다음 상황에서 추천하는 영화 이름을 출력해줘. 영화는 인지도가 10점 만점에 6점 이상인 영화들로 추천해줘." +
                 "실제로 존재하는 영화인지 검증하고 답변해줘.\n "
                 + situation + "\n 다른 부연설명이나 외적 설정(ex. \"\", 각종 이모지) 없이 영화 제목만 출력해줘.+\n" +
-                "또한 괄호를 통해 영문 번역본 제공하지 말고 영화제목만 알려줘. (ex. 라라랜드)";
+                "또한 괄호를 통해 영문 번역본 제공하지 말고 영화제목만 알려줘. (ex. 라라랜드, 인터스텔라)";
         GPTRequest.gptReqDTO request = new GPTRequest.gptReqDTO(gptModel, prompt);
         WebClient webClient = WebClient.builder()
                 .baseUrl(gptUrl)
