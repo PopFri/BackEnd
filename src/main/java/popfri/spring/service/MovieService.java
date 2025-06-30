@@ -382,8 +382,9 @@ public class MovieService {
                         .movieName(result.getTitle())
                         .imageUrl(result.getPoster_path())
                         .build();
-            } else
-                throw new MovieHandler(ErrorStatus._MOVIE_NOT_EXIST);
+            } else {
+                return getMovieIdToName("인터스텔라");
+            }
         }
         else
             throw new MovieHandler(ErrorStatus._TMDB_CONNECT_FAIL);
