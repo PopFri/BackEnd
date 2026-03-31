@@ -27,4 +27,12 @@ public class CacheConfig {
                 .expireAfterWrite(6, TimeUnit.HOURS)
                 .build();
     }
+
+    @Bean
+    public Cache<String, MovieResponse.MovieDetailDTO> movieDetailCache() {
+        return Caffeine.newBuilder()
+                .maximumSize(200)
+                .expireAfterWrite(5, TimeUnit.MINUTES)
+                .build();
+    }
 }

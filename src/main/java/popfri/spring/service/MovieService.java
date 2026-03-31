@@ -9,6 +9,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -48,9 +49,11 @@ public class MovieService {
     @Value("${KOFIC_API_KEY}")
     private String koficKey;
 
+    private final CacheManager cacheManager;
     private final Executor asyncExecutor = Executors.newFixedThreadPool(10);
     private final Cache<String, MovieResponse.TmdbDataByTitleDTO> tmdbTitleCache;
     private final Cache<String, List<MovieResponse.MovieRankingDTO>> boxofficeCache;
+    private final Cache<String, MovieResponse.MovieDetailDTO> movieDetailCache;
 
     public CompletableFuture<MovieResponse.MovieDetailDTO> loadMovieAsync(String movieId) {
         return CompletableFuture.supplyAsync(() -> loadMovie(movieId), asyncExecutor);
@@ -136,8 +139,25 @@ public class MovieService {
         }
     }
 
-    // 영화 상세 정보 호출
+    // 영화 상세 정보 호출 (L1: Caffeine 10분, L2: Redis 30분)
     public MovieResponse.MovieDetailDTO loadMovie(String movieId) {
+        // L1 조회
+        MovieResponse.MovieDetailDTO l1 = movieDetailCache.getIfPresent(movieId);
+        if (l1 != null) {
+            return l1;
+        }
+
+        // L2 조회
+        org.springframework.cache.Cache redisCache = cacheManager.getCache("movie");
+        if (redisCache != null) {
+            MovieResponse.MovieDetailDTO l2 = redisCache.get(movieId, MovieResponse.MovieDetailDTO.class);
+            if (l2 != null) {
+                movieDetailCache.put(movieId, l2);
+                return l2;
+            }
+        }
+
+        log.info("Cache miss, fetching from TMDB: {}", movieId);
         ObjectMapper objectMapper = new ObjectMapper();
         MovieResponse.MovieDetailDTO result = new MovieResponse.MovieDetailDTO();
 
@@ -220,6 +240,10 @@ public class MovieService {
         } catch (IOException e) {
             throw new MovieHandler(ErrorStatus._INTERNAL_SERVER_ERROR);
         }
+
+        // L1, L2 저장
+        movieDetailCache.put(movieId, result);
+        if (redisCache != null) redisCache.put(movieId, result);
 
         return result;
     }
